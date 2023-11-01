@@ -28,7 +28,6 @@ BUTTON::BUTTON(std::string napis, int x, int y) {
     button.setPosition(pos_x, pos_y);
 }
 
-// You can add more methods or member functions for BUTTON class as needed.
 
 void BUTTON::draw(sf::RenderWindow& window) {
     window.draw(button);

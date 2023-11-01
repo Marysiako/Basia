@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <string>  // You should include the string header.
+#include <string>
 
 class BUTTON {
 public:
