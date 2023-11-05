@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 
+// 40 -312 hz
 const int SAMPLE_RATE = 44100;
 const int FRAME_SIZE = 1024;
 

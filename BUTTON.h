@@ -4,7 +4,7 @@
 
 class BUTTON {
 public:
-    BUTTON(std::string napis, int x, int y);  // Use std::string instead of string.
+    BUTTON(std::string napis, int x, int y, std::string type);  // Use std::string instead of string.
     // Declare functions and methods related to the button here
     void draw(sf::RenderWindow& window);
     int pos_x;
