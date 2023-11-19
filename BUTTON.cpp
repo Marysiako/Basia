@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include <string>  // You should include the string header.
+#include <string>  
 #include"BUTTON.h"
 #include <iostream>
 
@@ -50,7 +50,7 @@ BUTTON::BUTTON(std::string napis, int x, int y, std::string type) {
     }
     if (type == "bigger")
     {
-        if (!texture.loadFromFile("graphic/button.png")) {
+        if (!texture.loadFromFile("graphic/button_bigger.png")) {
             std::cout << "Nie zaladowano grafiki\n";
         }
         pos_x = x;
@@ -59,15 +59,34 @@ BUTTON::BUTTON(std::string napis, int x, int y, std::string type) {
         sprite.setPosition(pos_x, pos_y);
 
         text.setFillColor(szary);
-        text.setCharacterSize(12);
+        text.setCharacterSize(35);
         text.setFont(font);
         text.setString(napis);
-        text.setPosition(pos_x + 13, pos_y + 4);
+        text.setPosition(pos_x + 30, pos_y + 40);
 
-        button.setSize(sf::Vector2f(320, 100));
+        button.setSize(sf::Vector2f(450, 150));
         button.setPosition(pos_x, pos_y);
     }
+    if (type == "medium")
+    {
+        if (!texture.loadFromFile("graphic/button_medium.png")) {
+            std::cout << "Nie zaladowano grafiki\n";
+        }
+        pos_x = x;
+        pos_y = y;
+        sprite.setTexture(texture);
+        sprite.setPosition(pos_x, pos_y);
 
+        text.setFillColor(szary);
+        text.setCharacterSize(35);
+        text.setFont(font);
+        text.setString(napis);
+        text.setPosition(pos_x + 30, pos_y + 20);
+
+        button.setSize(sf::Vector2f(167, 100));
+        button.setPosition(pos_x, pos_y);
+    }
+    
 }
 
 

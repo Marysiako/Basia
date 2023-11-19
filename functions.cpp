@@ -3,6 +3,9 @@
 #include <portaudio.h>
 #include <iostream>
 #include <vector>
+#include <SFML/Audio.hpp>
+#include <iostream>
+#include <cstdlib>
 
 // 40 -312 hz
 const int SAMPLE_RATE = 44100;
@@ -73,4 +76,11 @@ double GetFrequencyFromMicrophone() {
     Pa_Terminate();
 
     return frequency;
+}
+
+double GiveRandomIndex(int i)
+{
+    //Funkcja losuje numer z zakresu 0-i
+    size_t randomIndex = std::rand() % i;
+    return randomIndex;
 }

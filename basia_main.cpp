@@ -116,7 +116,12 @@ int main()
     BUTTON game2_button("Metronome finger", 300, 370, "bigger");
     BUTTON gamesingame_button("Games", 830, 550, "small");
 
-    BUTTON random_sound_button("Get the sound", 270, 200, "bigger");
+    BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
+
+    BUTTON abc_a_button("a", 200, 350, "medium");
+    BUTTON abc_b_button("b", 400, 350, "medium");
+    BUTTON abc_c_button("c", 600, 350, "medium");
+
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -416,9 +421,31 @@ int main()
                         sf::FloatRect getsound = random_sound_button.getSpriteGlobalBounds();
                         if(getsound.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
-                            int randomIndex = GiveRandomIndex();
-                            std::cout << randomIndex << std::endl;
+                            int randomIndex_sound = GiveRandomIndex(12);    //dzwiek
+                            std::cout << randomIndex_sound << std::endl;
+
+                            int randomIndex_exac= GiveRandomIndex(3);      // numer nagrania (kazdy dzwiek ma 3 wersje)
+                            std::cout << randomIndex_exac << std::endl;
+
+                            int randomIndex_position= GiveRandomIndex(3);   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
+                            std::cout << randomIndex_position << std::endl;
                         }
+                    }
+
+                }
+            }
+            if(screen_number == 52)
+            {
+                if(event.type == sf::Event::MouseButtonPressed)
+                {
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect gamesin = gamesingame_button.getSpriteGlobalBounds();
+                        if(gamesin.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 5;
+                        }
+                        
                     }
 
                 }
@@ -604,11 +631,19 @@ int main()
             window.draw(games_text);
             gamesingame_button.draw(window);
             random_sound_button.draw(window);
+            abc_a_button.draw(window);
+            abc_b_button.draw(window);
+            abc_c_button.draw(window);
             window.display();
         }
         //Game 2
         if (screen_number == 52)
         {
+            window.clear();
+            window.draw(background_cs_sprite);
+            //window.draw(games_text);
+            gamesingame_button.draw(window);
+            window.display();
         }
 
     }
