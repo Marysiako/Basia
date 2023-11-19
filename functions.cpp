@@ -78,7 +78,7 @@ double GetFrequencyFromMicrophone() {
     return frequency;
 }
 
-double GiveRandomIndex(int i)
+int GiveRandomIndex(int i)
 {
     //Funkcja losuje numer z zakresu 0-i
     size_t randomIndex = std::rand() % i;

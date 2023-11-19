@@ -5,6 +5,7 @@
 
 BUTTON::BUTTON(std::string napis, int x, int y, std::string type) {
     // Initialize sprite, text, and button in the constructor.
+    button_string = napis;
     if (!font.loadFromFile("minecraft_font.ttf")) {
         std::cout << "Nie zaladowano czcionki\n";
     }
@@ -96,3 +97,6 @@ void BUTTON::draw(sf::RenderWindow& window) {
     window.draw(text);
 }
 
+void BUTTON::changeText(std::string newText) {
+    text.setString(newText);
+}

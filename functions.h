@@ -8,6 +8,6 @@
 
 double CalculateFrequency(const std::vector<double>& samples);
 double GetFrequencyFromMicrophone();
-double GiveRandomIndex(int i);
+int GiveRandomIndex(int i);
 
 #endif

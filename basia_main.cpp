@@ -34,6 +34,11 @@ int beatsPerMeasure = 4; // Liczba taktów w metrum, uderzenia na miare
 int note = 4;       // 2 - cwierc nuta      4 - pol nuta    8- cala nuta 16 -
 int beatcounter = 4;    // Ustawiam jako liczbe taktow w metrum
 
+//DO GAMES1
+int randomIndex_sound = 1;
+SOUND random_sound_uget("bass_sounds/e1.wav");
+std::string choosed_sound = "i";
+
 bool metronome_power = 1;
 std::thread metronomeThread;
 
@@ -118,15 +123,17 @@ int main()
 
     BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
 
-    BUTTON abc_a_button("a", 200, 350, "medium");
-    BUTTON abc_b_button("b", 400, 350, "medium");
-    BUTTON abc_c_button("c", 600, 350, "medium");
+    BUTTON abc_a_button("e", 200, 350, "medium");
+    BUTTON abc_b_button("a", 400, 350, "medium");
+    BUTTON abc_c_button("d", 600, 350, "medium");
 
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
+    
 
-    std::vector<SOUND> sounds = {
+/*
+std::vector<SOUND> sounds = {
         SOUND("bass_sounds/e1.wav"), SOUND("bass_sounds/e2.wav"), SOUND("bass_sounds/e3.wav"),
         SOUND("bass_sounds/f1.wav"), SOUND("bass_sounds/f2.wav"), SOUND("bass_sounds/f3.wav"),
         SOUND("bass_sounds/fs1.wav"), SOUND("bass_sounds/fs2.wav"), SOUND("bass_sounds/fs3.wav"),
@@ -139,7 +146,8 @@ int main()
         SOUND("bass_sounds/cs1.wav"), SOUND("bass_sounds/cs2.wav"), SOUND("bass_sounds/cs3.wav"),
         SOUND("bass_sounds/d1.wav"), SOUND("bass_sounds/d2.wav"), SOUND("bass_sounds/d3.wav"),
         SOUND("bass_sounds/ds1.wav"), SOUND("bass_sounds/ds2.wav"), SOUND("bass_sounds/ds3.wav")
-    };
+    };*/
+    
     
     // OTHER TEXTURES
         //TUNER
@@ -191,6 +199,14 @@ int main()
     games_text.setCharacterSize(80);
     games_text.setPosition(370, 20);
     games_text.setFillColor(szary);
+
+    std::string guessedsound_string = "Do you know te sound?";
+    sf::Text guessedsound_text;
+    guessedsound_text.setFont(font);
+    guessedsound_text.setString(guessedsound_string);
+    guessedsound_text.setCharacterSize(40);
+    guessedsound_text.setPosition(40, 520);
+    guessedsound_text.setFillColor(szary);
 
 
     while (window.isOpen())
@@ -418,18 +434,90 @@ int main()
                         {
                             screen_number = 5;
                         }
+
                         sf::FloatRect getsound = random_sound_button.getSpriteGlobalBounds();
                         if(getsound.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
-                            int randomIndex_sound = GiveRandomIndex(12);    //dzwiek
+                            randomIndex_sound = GiveRandomIndex(11);    //dzwiek
                             std::cout << randomIndex_sound << std::endl;
 
-                            int randomIndex_exac= GiveRandomIndex(3);      // numer nagrania (kazdy dzwiek ma 3 wersje)
+                            int randomIndex_exac= GiveRandomIndex(3)+1;      // numer nagrania (kazdy dzwiek ma 3 wersje 1 2 3)
                             std::cout << randomIndex_exac << std::endl;
 
-                            int randomIndex_position= GiveRandomIndex(3);   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
-                            std::cout << randomIndex_position << std::endl;
+                            std::string random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
+                            //std::cout << random_sound_uget_string << std::endl;
+                            SOUND random_sound_uget(random_sound_uget_string);
+                            random_sound_uget.play_sound();
+
+                            int randomIndex_position= GiveRandomIndex(3)+1;   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
+                            std::cout << randomIndex_position << std::endl << std::endl;
+ 
+                            if (randomIndex_position == 1)
+                            {
+                                abc_a_button.changeText(sound_names[randomIndex_sound]);
+                                abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
+                            } 
+                            if (randomIndex_position == 2)
+                            {
+                                abc_b_button.changeText(sound_names[randomIndex_sound]);
+                                abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
+                            } 
+                            if (randomIndex_position == 3)
+                            {
+                                abc_c_button.changeText(sound_names[randomIndex_sound]);
+                                abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
+                            } 
                         }
+                        sf::FloatRect aa = abc_a_button.getSpriteGlobalBounds();
+                        if(aa.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            choosed_sound = abc_a_button.button_string;
+                            if(sound_names[randomIndex_sound] == choosed_sound)
+                            {
+                                guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                            if(sound_names[randomIndex_sound] != choosed_sound)
+                            {
+                                guessedsound_string = "WRONG It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                        }
+                        sf::FloatRect bb = abc_b_button.getSpriteGlobalBounds();
+                        if(bb.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            choosed_sound = abc_b_button.button_string;
+                            if(sound_names[randomIndex_sound] == choosed_sound)
+                            {
+                                guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                            if(sound_names[randomIndex_sound] != choosed_sound)
+                            {
+                                guessedsound_string = "WRONG It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                        }
+                        sf::FloatRect cc = abc_c_button.getSpriteGlobalBounds();
+                        if(cc.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            choosed_sound = abc_c_button.button_string;
+                            if(sound_names[randomIndex_sound] == choosed_sound)
+                            {
+                                guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                            if(sound_names[randomIndex_sound] != choosed_sound)
+                            {
+                                guessedsound_string = "WRONG It's "+sound_names[randomIndex_sound];
+                                guessedsound_text.setString(guessedsound_string);
+                            }
+                        }
+
+
                     }
 
                 }
@@ -625,6 +713,7 @@ int main()
         //Game 1
         if (screen_number == 51)
         {
+            
                 //drawing
             window.clear();
             window.draw(background_clear_sprite);
@@ -634,6 +723,7 @@ int main()
             abc_a_button.draw(window);
             abc_b_button.draw(window);
             abc_c_button.draw(window);
+            window.draw(guessedsound_text);
             window.display();
         }
         //Game 2
