@@ -48,6 +48,25 @@ BUTTON::BUTTON(std::string napis, int x, int y, std::string type) {
         button.setSize(sf::Vector2f(60, 23));
         button.setPosition(pos_x, pos_y);
     }
+    if (type == "bigger")
+    {
+        if (!texture.loadFromFile("graphic/button.png")) {
+            std::cout << "Nie zaladowano grafiki\n";
+        }
+        pos_x = x;
+        pos_y = y;
+        sprite.setTexture(texture);
+        sprite.setPosition(pos_x, pos_y);
+
+        text.setFillColor(szary);
+        text.setCharacterSize(12);
+        text.setFont(font);
+        text.setString(napis);
+        text.setPosition(pos_x + 13, pos_y + 4);
+
+        button.setSize(sf::Vector2f(320, 100));
+        button.setPosition(pos_x, pos_y);
+    }
 
 }
 

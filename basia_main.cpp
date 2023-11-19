@@ -10,12 +10,21 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "BUTTON.h"
 #include "functions.h"
+#include "SOUND.h"
+
+/*
+g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h 
+-o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -L/Basia/portaudio
+*/
+
 const int W = 1000;
 const int H = 600;
 int screen_number = 0; // 0-MENU, 1-TUNER, 2-TAB CREATOR, 3-METRONOME, 4-EFFECTS, 5-GAMES
+int game = 0;
 // DO TUNER
 double frequency = 1;
 
@@ -70,6 +79,7 @@ int main()
     window.setFramerateLimit(60);
     sf::Font font;
     font.loadFromFile("minecraft_font.ttf");
+    sf::Color szary = sf::Color(105, 105, 105);
 
     //BACKGROUND
     sf::Texture background_texture;
@@ -80,6 +90,11 @@ int main()
     sf::Texture background_cs_texture;
     background_cs_texture.loadFromFile("graphic/background_cs.png");
     sf::Sprite background_cs_sprite(background_cs_texture);
+
+    //BACKGROUND CLEAR
+    sf::Texture background_clear_texture;
+    background_clear_texture.loadFromFile("graphic/background_clear.png");
+    sf::Sprite background_clear_sprite(background_clear_texture);
 
     // BUTTONS (CLASS - BUTTON.H, BUTTON.CPP)
     BUTTON tuner_button("tuner",160, 150, "big");
@@ -96,14 +111,35 @@ int main()
     BUTTON metronome_notes_minus("-", 650 ,190, "small");
     BUTTON bpm_minus_button("-", 250, 320, "small");
     BUTTON bpm_plus_button("+", 650, 320, "small");
+    //GAMES BUTTON
+    BUTTON game1_button("Guess the sound", 300, 170, "bigger");
+    BUTTON game2_button("Metronome finger", 300, 370, "bigger");
+    BUTTON gamesingame_button("Games", 830, 550, "small");
 
+    BUTTON random_sound_button("Get the sound", 270, 200, "bigger");
 
+    //SOUNDS
+    std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
 
-
+    std::vector<SOUND> sounds = {
+        SOUND("bass_sounds/e1.wav"), SOUND("bass_sounds/e2.wav"), SOUND("bass_sounds/e3.wav"),
+        SOUND("bass_sounds/f1.wav"), SOUND("bass_sounds/f2.wav"), SOUND("bass_sounds/f3.wav"),
+        SOUND("bass_sounds/fs1.wav"), SOUND("bass_sounds/fs2.wav"), SOUND("bass_sounds/fs3.wav"),
+        SOUND("bass_sounds/g1.wav"), SOUND("bass_sounds/g2.wav"), SOUND("bass_sounds/g3.wav"),
+        SOUND("bass_sounds/gs1.wav"), SOUND("bass_sounds/gs2.wav"), SOUND("bass_sounds/gs3.wav"),
+        SOUND("bass_sounds/a1.wav"), SOUND("bass_sounds/a2.wav"), SOUND("bass_sounds/a3.wav"),
+        SOUND("bass_sounds/as1.wav"), SOUND("bass_sounds/as2.wav"), SOUND("bass_sounds/as3.wav"),
+        SOUND("bass_sounds/b1.wav"), SOUND("bass_sounds/b2.wav"), SOUND("bass_sounds/b3.wav"),
+        SOUND("bass_sounds/c1.wav"), SOUND("bass_sounds/c2.wav"), SOUND("bass_sounds/c3.wav"),
+        SOUND("bass_sounds/cs1.wav"), SOUND("bass_sounds/cs2.wav"), SOUND("bass_sounds/cs3.wav"),
+        SOUND("bass_sounds/d1.wav"), SOUND("bass_sounds/d2.wav"), SOUND("bass_sounds/d3.wav"),
+        SOUND("bass_sounds/ds1.wav"), SOUND("bass_sounds/ds2.wav"), SOUND("bass_sounds/ds3.wav")
+    };
+    
     // OTHER TEXTURES
         //TUNER
-        int line_x = W/2;
-        int line_y = H/2-20;
+        double line_x = W/2;
+        double line_y = H/2-20;
     sf::Texture tuner_texture;
     tuner_texture.loadFromFile("graphic/tuner.png");
     sf::Sprite tuner_sprite(tuner_texture);
@@ -115,11 +151,7 @@ int main()
     line_sprite.setPosition(line_x, line_y);
 
     // METRONOME
-
-    sf::Text metronome_top_text;
-    sf::Text metronome_bottom_text;
-    sf::Text bpm_text;
-
+    
     sf::RectangleShape slider(sf::Vector2f(300, 5)); // Pasek suwaka
     slider.setPosition(345, 400);
     slider.setFillColor(sf::Color::Black);
@@ -129,27 +161,39 @@ int main()
     slider_circle.setPosition(495, 395); // Pozycja początkową kółka
 
 
-    // Przykład ustawienia czcionki i pozycji:
-    metronome_top_text.setFont(font); // Zamiast "yourFont" podaj własną czcionkę.
-    metronome_bottom_text.setFont(font); // Zamiast "yourFont" podaj własną czcionkę.
-    metronome_top_text.setPosition(380, 140); // Ustaw pozycję "x" i "y".
-    metronome_bottom_text.setPosition(530, 140); // Ustaw pozycję "x" i "y".
+    // czcionki i pozycje
+    //Metronom
+    sf::Text metronome_top_text;
+    sf::Text metronome_bottom_text;
+    sf::Text bpm_text;
+
+    metronome_top_text.setFont(font);
+    metronome_bottom_text.setFont(font);
+    metronome_top_text.setPosition(380, 140);
+    metronome_bottom_text.setPosition(530, 140);
     metronome_top_text.setCharacterSize(80);
     metronome_bottom_text.setCharacterSize(80);
+    metronome_top_text.setFillColor(szary);
+    metronome_bottom_text.setFillColor(szary);
+    bpm_text.setFillColor(szary);
     bpm_text.setFont(font);
     bpm_text.setPosition(390, 280);
     bpm_text.setCharacterSize(80);
+    //Games
+    sf::Text games_text;
+    games_text.setFont(font);
+    games_text.setString("Games");
+    games_text.setCharacterSize(80);
+    games_text.setPosition(370, 20);
+    games_text.setFillColor(szary);
+
 
     while (window.isOpen())
     {
         // Pobieram ciagle czestotliwosc
         /*
         */
-               // NIE DZIALA MIKROFON
-        frequency = GetFrequencyFromMicrophone();
-        std::cout << "czestotliwosc: " << frequency << "\n";
-        /*
-        */
+
         sf::Event event;
         while(window.pollEvent(event))
         {
@@ -345,7 +389,38 @@ int main()
                         {
                             screen_number = 0;
                         }
+                        sf::FloatRect game1_ = game1_button.getSpriteGlobalBounds();
+                        if(game1_.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 51;
+                        }
+                        sf::FloatRect game2_ = game2_button.getSpriteGlobalBounds();
+                        if(game2_.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 52;
+                        }
                     }
+                }
+            }
+            if(screen_number == 51)
+            {
+                if(event.type == sf::Event::MouseButtonPressed)
+                {
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect gamesin = gamesingame_button.getSpriteGlobalBounds();
+                        if(gamesin.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 5;
+                        }
+                        sf::FloatRect getsound = random_sound_button.getSpriteGlobalBounds();
+                        if(getsound.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            int randomIndex = GiveRandomIndex();
+                            std::cout << randomIndex << std::endl;
+                        }
+                    }
+
                 }
             }
 
@@ -372,6 +447,64 @@ int main()
         // TUNER
         if (screen_number == 1)
         {
+                           // NIE DZIALA MIKROFON
+        frequency = GetFrequencyFromMicrophone();
+        std::cout << "czestotliwosc: " << frequency << "\n";
+        // E - 38,41,44,   A - 52,55,58, D - 70,73,78 G - 95,98,101
+        if(frequency<45 && frequency> 37)   //E
+        {
+            line_y = 405;
+            double k = 41-frequency;
+            if(k>0)
+            {
+                line_x = W/2 - k*100;
+            }
+            else
+            {
+            line_x = W/2 + k*100;
+            }
+        }
+        if(frequency<59 && frequency>51)   //A
+        {
+            line_y = 340;
+            double k = 55-frequency;
+            if(k>0)
+            {
+                line_x = W/2 - k*100;
+            }
+            else
+            {
+            line_x = W/2 + k*100;
+            }
+        }
+        if(frequency<77 && frequency>69)   //D
+        {
+            line_y = 278;
+            double k = 73-frequency;
+            if(k>0)
+            {
+                line_x = W/2 - k*100;
+            }
+            else
+            {
+            line_x = W/2 + k*100;
+            }
+        }
+        if(frequency<102 && frequency>74)   //G
+        {
+            line_y = 223;
+            double k = 98-frequency;
+            if(k>0)
+            {
+                line_x = W/2 - k*100;
+            }
+            else
+            {
+            line_x = W/2 + k*100;
+            }
+        }
+
+        line_sprite.setPosition(line_x, line_y);
             //drawing
             window.clear();
             window.draw(background_sprite);
@@ -383,6 +516,9 @@ int main()
         // TAB CREATOR
         if (screen_number == 2)
         {
+                               // NIE DZIALA MIKROFON
+            frequency = GetFrequencyFromMicrophone();
+            std::cout << "czestotliwosc: " << frequency << "\n";
             //drawing
             window.clear();
             window.draw(background_cs_sprite);
@@ -447,11 +583,32 @@ int main()
         // GAMES
         if (screen_number == 5)
         {
+            //e1_sound.play_sound();
+
             //drawing
             window.clear();
-            window.draw(background_cs_sprite);
+            window.draw(background_clear_sprite);
+            window.draw(games_text);
             back_button.draw(window);
+            game1_button.draw(window);
+            game2_button.draw(window);
             window.display();
+
+        }
+        //Game 1
+        if (screen_number == 51)
+        {
+                //drawing
+            window.clear();
+            window.draw(background_clear_sprite);
+            window.draw(games_text);
+            gamesingame_button.draw(window);
+            random_sound_button.draw(window);
+            window.display();
+        }
+        //Game 2
+        if (screen_number == 52)
+        {
         }
 
     }
