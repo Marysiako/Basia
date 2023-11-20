@@ -38,6 +38,8 @@ int beatcounter = 4;    // Ustawiam jako liczbe taktow w metrum
 int randomIndex_sound = 1;
 std::string random_sound_uget_string = "bass_sounds/e3.wav";
 //SOUND random_sound_uget(random_sound_uget_string);
+sf::SoundBuffer random_sound_buffer;
+
 std::string choosed_sound = "i";
 std::string guessedsound_string = "Do you know te sound?";
 sf::Text guessedsound_text;
@@ -105,6 +107,12 @@ int main()
     background_clear_texture.loadFromFile("graphic/background_clear.png");
     sf::Sprite background_clear_sprite(background_clear_texture);
 
+    if (!random_sound_buffer.loadFromFile(random_sound_uget_string)) {
+     std::cout << "Nie można załadować pliku audio "+random_sound_uget_string << std::endl;
+    }
+    sf::Sound random_sound_sound;
+    random_sound_sound.setBuffer(random_sound_buffer);
+
     // BUTTONS (CLASS - BUTTON.H, BUTTON.CPP)
     BUTTON tuner_button("tuner",160, 150, "big");
     BUTTON tabcreator_button("tab creator", 520, 150, "big");
@@ -126,15 +134,14 @@ int main()
     BUTTON game1_button("Guess the sound", 300, 170, "bigger");
     BUTTON game2_button("Metronome finger", 300, 370, "bigger");
     BUTTON gamesingame_button("Games", 830, 550, "small"); 
-
     BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
 
     std::string a_text = "e";
     std::string b_text = "a";
     std::string c_text = "d";
-    BUTTON abc_a_button("e", 200, 350, "medium");
-    BUTTON abc_b_button("a", 400, 350, "medium");
-    BUTTON abc_c_button("d", 600, 350, "medium");
+    BUTTON abc_a_button(a_text, 200, 350, "medium");
+    BUTTON abc_b_button(b_text, 400, 350, "medium");
+    BUTTON abc_c_button(c_text, 600, 350, "medium");
 
 
     //SOUNDS
@@ -200,13 +207,8 @@ int main()
     guessedsound_text.setPosition(40, 520);
     guessedsound_text.setFillColor(szary);
 
-
     while (window.isOpen())
     {
-        // Pobieram ciagle czestotliwosc
-        /*
-        */
-
         sf::Event event;
         while(window.pollEvent(event))
         {
@@ -454,15 +456,12 @@ int main()
                             std::cout << sound_names[randomIndex_sound] << std::endl;
 
                             int randomIndex_exac= GiveRandomIndex(3)+1;      // numer nagrania (kazdy dzwiek ma 3 wersje 1 2 3)
-                            std::cout << randomIndex_exac << std::endl;
+                            
 
                             random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
-                            //std::cout << random_sound_uget_string << std::endl;
-                            SOUND random_sound_uget(random_sound_uget_string);
-                            random_sound_uget.play_sound();
+                            random_sound_sound.play();
 
                             int randomIndex_position= GiveRandomIndex(3)+1;   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
-                            std::cout << randomIndex_position << std::endl;
  
                             if (randomIndex_position == 1)
                             {
