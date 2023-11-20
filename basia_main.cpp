@@ -36,8 +36,12 @@ int beatcounter = 4;    // Ustawiam jako liczbe taktow w metrum
 
 //DO GAMES1
 int randomIndex_sound = 1;
-SOUND random_sound_uget("bass_sounds/e1.wav");
+std::string random_sound_uget_string = "bass_sounds/e3.wav";
+//SOUND random_sound_uget(random_sound_uget_string);
 std::string choosed_sound = "i";
+std::string guessedsound_string = "Do you know te sound?";
+sf::Text guessedsound_text;
+
 
 bool metronome_power = 1;
 std::thread metronomeThread;
@@ -116,13 +120,18 @@ int main()
     BUTTON metronome_notes_minus("-", 650 ,190, "small");
     BUTTON bpm_minus_button("-", 250, 320, "small");
     BUTTON bpm_plus_button("+", 650, 320, "small");
+    BUTTON tabs_button("training tabs", 320,450, "big");
+    BUTTON back_metronome_button("metronome", 930,550, "small");
     //GAMES BUTTON
     BUTTON game1_button("Guess the sound", 300, 170, "bigger");
     BUTTON game2_button("Metronome finger", 300, 370, "bigger");
-    BUTTON gamesingame_button("Games", 830, 550, "small");
+    BUTTON gamesingame_button("Games", 830, 550, "small"); 
 
     BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
 
+    std::string a_text = "e";
+    std::string b_text = "a";
+    std::string c_text = "d";
     BUTTON abc_a_button("e", 200, 350, "medium");
     BUTTON abc_b_button("a", 400, 350, "medium");
     BUTTON abc_c_button("d", 600, 350, "medium");
@@ -130,24 +139,6 @@ int main()
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
-    
-
-/*
-std::vector<SOUND> sounds = {
-        SOUND("bass_sounds/e1.wav"), SOUND("bass_sounds/e2.wav"), SOUND("bass_sounds/e3.wav"),
-        SOUND("bass_sounds/f1.wav"), SOUND("bass_sounds/f2.wav"), SOUND("bass_sounds/f3.wav"),
-        SOUND("bass_sounds/fs1.wav"), SOUND("bass_sounds/fs2.wav"), SOUND("bass_sounds/fs3.wav"),
-        SOUND("bass_sounds/g1.wav"), SOUND("bass_sounds/g2.wav"), SOUND("bass_sounds/g3.wav"),
-        SOUND("bass_sounds/gs1.wav"), SOUND("bass_sounds/gs2.wav"), SOUND("bass_sounds/gs3.wav"),
-        SOUND("bass_sounds/a1.wav"), SOUND("bass_sounds/a2.wav"), SOUND("bass_sounds/a3.wav"),
-        SOUND("bass_sounds/as1.wav"), SOUND("bass_sounds/as2.wav"), SOUND("bass_sounds/as3.wav"),
-        SOUND("bass_sounds/b1.wav"), SOUND("bass_sounds/b2.wav"), SOUND("bass_sounds/b3.wav"),
-        SOUND("bass_sounds/c1.wav"), SOUND("bass_sounds/c2.wav"), SOUND("bass_sounds/c3.wav"),
-        SOUND("bass_sounds/cs1.wav"), SOUND("bass_sounds/cs2.wav"), SOUND("bass_sounds/cs3.wav"),
-        SOUND("bass_sounds/d1.wav"), SOUND("bass_sounds/d2.wav"), SOUND("bass_sounds/d3.wav"),
-        SOUND("bass_sounds/ds1.wav"), SOUND("bass_sounds/ds2.wav"), SOUND("bass_sounds/ds3.wav")
-    };*/
-    
     
     // OTHER TEXTURES
         //TUNER
@@ -164,6 +155,9 @@ std::vector<SOUND> sounds = {
     line_sprite.setPosition(line_x, line_y);
 
     // METRONOME
+    sf::Texture metronome_tabs_texture;
+    metronome_tabs_texture.loadFromFile("graphic/background_training.png");
+    sf::Sprite metronome_tabs_sprite(metronome_tabs_texture);
     
     sf::RectangleShape slider(sf::Vector2f(300, 5)); // Pasek suwaka
     slider.setPosition(345, 400);
@@ -199,9 +193,7 @@ std::vector<SOUND> sounds = {
     games_text.setCharacterSize(80);
     games_text.setPosition(370, 20);
     games_text.setFillColor(szary);
-
-    std::string guessedsound_string = "Do you know te sound?";
-    sf::Text guessedsound_text;
+    
     guessedsound_text.setFont(font);
     guessedsound_text.setString(guessedsound_string);
     guessedsound_text.setCharacterSize(40);
@@ -379,7 +371,26 @@ std::vector<SOUND> sounds = {
                                 tempo -= 1;
                             }
                         }
+                        sf::FloatRect tab = tabs_button.getSpriteGlobalBounds();
+                        if(tab.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 31;
+                        }
 
+                    }
+                }
+            }
+            if(screen_number ==31)
+            {
+                if(event.type == sf::Event::MouseButtonPressed)
+                {
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect backm = back_metronome_button.getSpriteGlobalBounds();
+                        if(backm.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            screen_number = 3;
+                        }
                     }
                 }
             }
@@ -414,6 +425,7 @@ std::vector<SOUND> sounds = {
                         if(game1_.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             screen_number = 51;
+                            
                         }
                         sf::FloatRect game2_ = game2_button.getSpriteGlobalBounds();
                         if(game2_.contains(float(event.mouseButton.x),(event.mouseButton.y)))
@@ -439,42 +451,56 @@ std::vector<SOUND> sounds = {
                         if(getsound.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             randomIndex_sound = GiveRandomIndex(11);    //dzwiek
-                            std::cout << randomIndex_sound << std::endl;
+                            std::cout << sound_names[randomIndex_sound] << std::endl;
 
                             int randomIndex_exac= GiveRandomIndex(3)+1;      // numer nagrania (kazdy dzwiek ma 3 wersje 1 2 3)
                             std::cout << randomIndex_exac << std::endl;
 
-                            std::string random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
+                            random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
                             //std::cout << random_sound_uget_string << std::endl;
                             SOUND random_sound_uget(random_sound_uget_string);
                             random_sound_uget.play_sound();
 
                             int randomIndex_position= GiveRandomIndex(3)+1;   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
-                            std::cout << randomIndex_position << std::endl << std::endl;
+                            std::cout << randomIndex_position << std::endl;
  
                             if (randomIndex_position == 1)
                             {
                                 abc_a_button.changeText(sound_names[randomIndex_sound]);
                                 abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
                                 abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                a_text = sound_names[randomIndex_sound];
+                                b_text = sound_names[GiveRandomIndex(11)];
+                                c_text = sound_names[GiveRandomIndex(11)];
+                                std::cout << "poz 1\n\n";
                             } 
                             if (randomIndex_position == 2)
                             {
                                 abc_b_button.changeText(sound_names[randomIndex_sound]);
                                 abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
                                 abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                b_text = sound_names[randomIndex_sound];
+                                a_text = sound_names[GiveRandomIndex(11)];
+                                c_text = sound_names[GiveRandomIndex(11)];
+                                std::cout << "poz 2\n\n";
                             } 
                             if (randomIndex_position == 3)
                             {
                                 abc_c_button.changeText(sound_names[randomIndex_sound]);
                                 abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
                                 abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
+                                c_text = sound_names[randomIndex_sound];
+                                b_text = sound_names[GiveRandomIndex(11)];
+                                a_text = sound_names[GiveRandomIndex(11)];
+                                std::cout << "poz 3\n\n";
                             } 
                         }
                         sf::FloatRect aa = abc_a_button.getSpriteGlobalBounds();
                         if(aa.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
-                            choosed_sound = abc_a_button.button_string;
+                            //choosed_sound = abc_a_button.button_string;
+                            choosed_sound = a_text;
+                            std::cout << choosed_sound+"\n";
                             if(sound_names[randomIndex_sound] == choosed_sound)
                             {
                                 guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
@@ -489,7 +515,8 @@ std::vector<SOUND> sounds = {
                         sf::FloatRect bb = abc_b_button.getSpriteGlobalBounds();
                         if(bb.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
-                            choosed_sound = abc_b_button.button_string;
+            
+                            choosed_sound = b_text;
                             if(sound_names[randomIndex_sound] == choosed_sound)
                             {
                                 guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
@@ -504,7 +531,8 @@ std::vector<SOUND> sounds = {
                         sf::FloatRect cc = abc_c_button.getSpriteGlobalBounds();
                         if(cc.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
-                            choosed_sound = abc_c_button.button_string;
+                           
+                            choosed_sound = c_text;
                             if(sound_names[randomIndex_sound] == choosed_sound)
                             {
                                 guessedsound_string = "RIGHT It's "+sound_names[randomIndex_sound];
@@ -682,7 +710,16 @@ std::vector<SOUND> sounds = {
             window.draw(slider);
             window.draw(slider_circle);
             back_button.draw(window);
-
+            tabs_button.draw(window);
+            window.display();
+        }
+        //matronome tabs
+        if (screen_number == 31)
+        {
+           // RYSOWANIE
+            window.clear();
+            window.draw(metronome_tabs_sprite);
+            back_metronome_button.draw(window);
             window.display();
         }
         // EFFECTS

@@ -10,6 +10,8 @@ SOUND::SOUND(std::string filename) {
 
     if (!buffer.loadFromFile(filename)) {
      std::cout << "Nie można załadować pliku audio "+filename << std::endl;
+    }else {
+     std::cout << "Zaladowano "+filename << std::endl;
     }
 
     sound.setBuffer(buffer);
