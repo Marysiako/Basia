@@ -459,39 +459,63 @@ int main()
                             
 
                             random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
+                            random_sound_buffer.loadFromFile(random_sound_uget_string);
+                            random_sound_sound.setBuffer(random_sound_buffer);
                             random_sound_sound.play();
 
                             int randomIndex_position= GiveRandomIndex(3)+1;   //pozycja a b lgdzie lub c dzie bedzie poprawny dziek  
  
                             if (randomIndex_position == 1)
                             {
-                                abc_a_button.changeText(sound_names[randomIndex_sound]);
-                                abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
-                                abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
                                 a_text = sound_names[randomIndex_sound];
                                 b_text = sound_names[GiveRandomIndex(11)];
                                 c_text = sound_names[GiveRandomIndex(11)];
+                                while((b_text == a_text) || (c_text == a_text))
+                                {
+                                    b_text = sound_names[GiveRandomIndex(11)];
+                                    c_text = sound_names[GiveRandomIndex(11)];
+                                }
+                                abc_a_button.changeText(a_text);
+                                abc_b_button.changeText(b_text);
+                                abc_c_button.changeText(c_text);
+                                
+                                std::cout << random_sound_uget_string;
                                 std::cout << "poz 1\n\n";
                             } 
                             if (randomIndex_position == 2)
-                            {
-                                abc_b_button.changeText(sound_names[randomIndex_sound]);
-                                abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
-                                abc_c_button.changeText(sound_names[GiveRandomIndex(11)]);
+                            {   
                                 b_text = sound_names[randomIndex_sound];
                                 a_text = sound_names[GiveRandomIndex(11)];
                                 c_text = sound_names[GiveRandomIndex(11)];
+                                while((b_text == a_text) || (c_text == b_text))
+                                {
+                                    a_text = sound_names[GiveRandomIndex(11)];
+                                    c_text = sound_names[GiveRandomIndex(11)];
+                                }
+                                abc_a_button.changeText(a_text);
+                                abc_b_button.changeText(b_text);
+                                abc_c_button.changeText(c_text);
+                                
+                                std::cout << random_sound_uget_string;
                                 std::cout << "poz 2\n\n";
                             } 
                             if (randomIndex_position == 3)
                             {
-                                abc_c_button.changeText(sound_names[randomIndex_sound]);
-                                abc_b_button.changeText(sound_names[GiveRandomIndex(11)]);
-                                abc_a_button.changeText(sound_names[GiveRandomIndex(11)]);
                                 c_text = sound_names[randomIndex_sound];
                                 b_text = sound_names[GiveRandomIndex(11)];
                                 a_text = sound_names[GiveRandomIndex(11)];
+                                while((b_text == c_text) || (c_text == a_text))
+                                {
+                                    b_text = sound_names[GiveRandomIndex(11)];
+                                    a_text = sound_names[GiveRandomIndex(11)];
+                                }
+                                abc_a_button.changeText(a_text);
+                                abc_b_button.changeText(b_text);
+                                abc_c_button.changeText(c_text);
+                                
+                                std::cout << random_sound_uget_string;
                                 std::cout << "poz 3\n\n";
+                                
                             } 
                         }
                         sf::FloatRect aa = abc_a_button.getSpriteGlobalBounds();
