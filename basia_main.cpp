@@ -15,10 +15,16 @@
 #include "BUTTON.h"
 #include "functions.h"
 #include "SOUND.h"
+//#include "AUDIO.h"
+
 
 /*
 g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h 
 -o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -L/Basia/portaudio
+
+g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h
+ -o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio 
+ -lfftw3 -L/Basia/portaudio
 */
 
 const int W = 1000;
@@ -47,6 +53,12 @@ sf::Text guessedsound_text;
 
 bool metronome_power = 1;
 std::thread metronomeThread;
+
+/*/ do tuner
+const int SAMPLE_RATE = 44100;
+const int FRAME_SIZE = 1024;
+const double PI = 3.14159265358979323846;
+*/
 
 // Inicjalizacja dzwiekow do metronomu
 void MetronomeThread() {
@@ -82,6 +94,7 @@ void MetronomeThread() {
         }
     }
 }
+
 
 int main()
 {
@@ -206,6 +219,27 @@ int main()
     guessedsound_text.setCharacterSize(40);
     guessedsound_text.setPosition(40, 520);
     guessedsound_text.setFillColor(szary);
+
+    //////////////
+    /*
+    FrequencyRecorder recorder;
+
+    if (!recorder.isAvailable()) {
+        std::cerr << "Mikrofon niedostępny." << std::endl;
+        return 1;
+    }
+
+    // Ustawienie parametrów nagrywania.
+    ////recorder.setSampleRate(SAMPLE_RATE);
+    recorder.setChannelCount(1);  // Nagrywanie z jednego kanału (mono).
+
+    // Uruchomienie nagrywania w oddzielnym wątku, aby umożliwić jednoczesne działanie pętli głównej.
+    sf::Thread recorder_thread(&FrequencyRecorder::Run, &recorder);
+    recorder_thread.launch();
+
+    //////////////
+*/
+////////////////////////
 
     while (window.isOpen())
     {
@@ -615,7 +649,11 @@ int main()
         {
                            // NIE DZIALA MIKROFON
         frequency = GetFrequencyFromMicrophone();
+        //frequency = getFrequency();
+        //double currentFrequency = recorder.getCurrentFrequency();
+
         std::cout << "czestotliwosc: " << frequency << "\n";
+        
         // E - 38,41,44,   A - 52,55,58, D - 70,73,78 G - 95,98,101
         if(frequency<45 && frequency> 37)   //E
         {
@@ -683,8 +721,9 @@ int main()
         if (screen_number == 2)
         {
                                // NIE DZIALA MIKROFON
-            frequency = GetFrequencyFromMicrophone();
-            std::cout << "czestotliwosc: " << frequency << "\n";
+
+            //frequency = GetFrequencyFromMicrophone();
+            //std::cout << "czestotliwosc: " << frequency << "\n";
             //drawing
             window.clear();
             window.draw(background_cs_sprite);
