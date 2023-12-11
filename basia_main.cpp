@@ -15,9 +15,8 @@
 #include "BUTTON.h"
 #include "functions.h"
 #include "SOUND.h"
+#include "TEXTURE.h"
 //#include "AUDIO.h"
-
-
 /*
 g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h 
 -o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -L/Basia/portaudio
@@ -105,20 +104,9 @@ int main()
     font.loadFromFile("minecraft_font.ttf");
     sf::Color szary = sf::Color(105, 105, 105);
 
-    //BACKGROUND
-    sf::Texture background_texture;
-    background_texture.loadFromFile("graphic/background.png");
-    sf::Sprite background_sprite(background_texture);
-
-    //BACKGROUND COMING SOON
-    sf::Texture background_cs_texture;
-    background_cs_texture.loadFromFile("graphic/background_cs.png");
-    sf::Sprite background_cs_sprite(background_cs_texture);
-
-    //BACKGROUND CLEAR
-    sf::Texture background_clear_texture;
-    background_clear_texture.loadFromFile("graphic/background_clear.png");
-    sf::Sprite background_clear_sprite(background_clear_texture);
+    TEXTURE background_sprite("graphic/background.png", 0, 0);
+    TEXTURE background_cs_sprite("graphic/background_cs.png", 0, 0);    //BACKGROUND COMING SOON
+    TEXTURE background_clear_sprite("graphic/background_clear.png", 0, 0);
 
     if (!random_sound_buffer.loadFromFile(random_sound_uget_string)) {
      std::cout << "Nie można załadować pliku audio "+random_sound_uget_string << std::endl;
@@ -145,7 +133,7 @@ int main()
     BUTTON back_metronome_button("metronome", 930,550, "small");
     //GAMES BUTTON
     BUTTON game1_button("Guess the sound", 300, 170, "bigger");
-    BUTTON game2_button("Metronome finger", 300, 370, "bigger");
+    BUTTON game2_button("Guess the fret", 300, 370, "bigger");
     BUTTON gamesingame_button("Games", 830, 550, "small"); 
     BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
 
@@ -164,10 +152,7 @@ int main()
         //TUNER
         double line_x = W/2;
         double line_y = H/2-20;
-    sf::Texture tuner_texture;
-    tuner_texture.loadFromFile("graphic/tuner.png");
-    sf::Sprite tuner_sprite(tuner_texture);
-    tuner_sprite.setPosition(W/2-307, 150);
+    TEXTURE tuner_sprite("graphic/tuner.png", W/2-307, 150);
 
     sf::Texture line_texture;
     line_texture.loadFromFile("graphic/line.png");
@@ -633,7 +618,7 @@ int main()
 
             //rysowanie
             window.clear();
-            window.draw(background_sprite);
+            background_sprite.draw(window);
 
             //DRAWING BUTTONS
             tuner_button.draw(window);
@@ -711,8 +696,9 @@ int main()
         line_sprite.setPosition(line_x, line_y);
             //drawing
             window.clear();
-            window.draw(background_sprite);
-            window.draw(tuner_sprite);
+            background_sprite.draw(window);
+            //window.draw(tuner_sprite);
+            tuner_sprite.draw(window);
             window.draw(line_sprite);
             back_button.draw(window);
             window.display();
@@ -726,7 +712,7 @@ int main()
             //std::cout << "czestotliwosc: " << frequency << "\n";
             //drawing
             window.clear();
-            window.draw(background_cs_sprite);
+            background_cs_sprite.draw(window);
             back_button.draw(window);
             window.display();
         }
@@ -759,7 +745,7 @@ int main()
 
             // RYSOWANIE
             window.clear();
-            window.draw(background_sprite);
+            background_sprite.draw(window);
             window.draw(metronome_top_text);
             window.draw(metronome_bottom_text);
             metronome_beats_plus.draw(window);
@@ -789,7 +775,7 @@ int main()
         {
             //drawing
             window.clear();
-            window.draw(background_cs_sprite);
+            background_cs_sprite.draw(window);
             back_button.draw(window);
             window.display();
         }
@@ -801,7 +787,8 @@ int main()
 
             //drawing
             window.clear();
-            window.draw(background_clear_sprite);
+            //window.draw(background_clear_sprite);
+            background_clear_sprite.draw(window);
             window.draw(games_text);
             back_button.draw(window);
             game1_button.draw(window);
@@ -815,7 +802,8 @@ int main()
             
                 //drawing
             window.clear();
-            window.draw(background_clear_sprite);
+            //window.draw(background_clear_sprite);
+            background_clear_sprite.draw(window);
             window.draw(games_text);
             gamesingame_button.draw(window);
             random_sound_button.draw(window);
@@ -829,7 +817,8 @@ int main()
         if (screen_number == 52)
         {
             window.clear();
-            window.draw(background_cs_sprite);
+            //window.draw(background_clear_sprite);
+            background_clear_sprite.draw(window);
             //window.draw(games_text);
             gamesingame_button.draw(window);
             window.display();
