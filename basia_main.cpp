@@ -16,14 +16,14 @@
 #include "functions.h"
 #include "SOUND.h"
 #include "TEXTURE.h"
+#include "TEXT.h"
 //#include "AUDIO.h"
 /*
 g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h 
 -o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -L/Basia/portaudio
 
-g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h
- -o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio 
- -lfftw3 -L/Basia/portaudio
+g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h TEXTURE.cpp TEXTURE.h 
+-o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lfftw3 -L/Basia/portaudio
 */
 
 const int W = 1000;
@@ -49,6 +49,7 @@ std::string choosed_sound = "i";
 std::string guessedsound_string = "Do you know te sound?";
 sf::Text guessedsound_text;
 
+bool show_fr = 0;
 
 bool metronome_power = 1;
 std::thread metronomeThread;
@@ -107,6 +108,10 @@ int main()
     TEXTURE background_sprite("graphic/background.png", 0, 0);
     TEXTURE background_cs_sprite("graphic/background_cs.png", 0, 0);    //BACKGROUND COMING SOON
     TEXTURE background_clear_sprite("graphic/background_clear.png", 0, 0);
+    TEXTURE tuner_sprite("graphic/tuner.png", W/2-307, 150);        //TEXTURE OF TUNER GRAPHIC
+    TEXTURE metronome_tabs_sprite("graphic/background_training.png", 0, 0);     //Tabs graphic
+    TEXTURE fretboard_clear_sprite("graphic/fretboard.png", 0, 200);
+    TEXTURE freatboard_filled_sprite("graphic/freatboard_filled.png", 0, 200);
 
     if (!random_sound_buffer.loadFromFile(random_sound_uget_string)) {
      std::cout << "Nie można załadować pliku audio "+random_sound_uget_string << std::endl;
@@ -136,6 +141,7 @@ int main()
     BUTTON game2_button("Guess the fret", 300, 370, "bigger");
     BUTTON gamesingame_button("Games", 830, 550, "small"); 
     BUTTON random_sound_button("Get the sound", 270, 150, "bigger");
+    BUTTON fretboard_fill_button("Show", 750, 550, "small");
 
     std::string a_text = "e";
     std::string b_text = "a";
@@ -144,37 +150,30 @@ int main()
     BUTTON abc_b_button(b_text, 400, 350, "medium");
     BUTTON abc_c_button(c_text, 600, 350, "medium");
 
-
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
     
     // OTHER TEXTURES
-        //TUNER
-        double line_x = W/2;
-        double line_y = H/2-20;
-    TEXTURE tuner_sprite("graphic/tuner.png", W/2-307, 150);
-
-    sf::Texture line_texture;
+    //TUNER
+    double line_x = W/2;       //LINIA DO TUNERA, WSKAZOWKA
+    double line_y = H/2-20;
+    sf::Texture line_texture;           // Tej tekstury nie zmieniam na klas ebo pozniej zmieniam pozycje
     line_texture.loadFromFile("graphic/line.png");
     sf::Sprite line_sprite(line_texture);
     line_sprite.setPosition(line_x, line_y);
-
-    // METRONOME
-    sf::Texture metronome_tabs_texture;
-    metronome_tabs_texture.loadFromFile("graphic/background_training.png");
-    sf::Sprite metronome_tabs_sprite(metronome_tabs_texture);
-    
-    sf::RectangleShape slider(sf::Vector2f(300, 5)); // Pasek suwaka
+    // METRONOM
+    sf::RectangleShape slider(sf::Vector2f(300, 5));    // Pasek suwaka
     slider.setPosition(345, 400);
     slider.setFillColor(sf::Color::Black);
 
-    sf::CircleShape slider_circle(10); // Kółko suwaka
+    sf::CircleShape slider_circle(10);      // Kółko suwaka
     slider_circle.setFillColor(sf::Color::White);
     slider_circle.setPosition(495, 395); // Pozycja początkową kółka
 
 
     // czcionki i pozycje
     //Metronom
+    //TEXT metronome_top_text("4", 380, 140, 80, "szary");
     sf::Text metronome_top_text;
     sf::Text metronome_bottom_text;
     sf::Text bpm_text;
@@ -607,6 +606,26 @@ int main()
                     }
 
                 }
+                if(event.type == sf::Event::MouseButtonPressed)
+                {
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect showw = fretboard_fill_button.getSpriteGlobalBounds();
+                        if(showw.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            show_fr = 1;
+                        }
+                        
+                    }                               //NIE DZIALA NA TRZYMANIE
+
+                }
+                else if (event.type == sf::Event::MouseButtonReleased)
+                {
+                    if (event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        show_fr = 0;
+                    }
+                }
             }
 
         }
@@ -725,6 +744,7 @@ int main()
             std::string bpmstr = std::to_string(tempo);
 
             metronome_top_text.setString(beatsPerMeasureStr);
+            //metronome_top_text.settext(beatsPerMeasureStr);
             metronome_bottom_text.setString(noteStr);
             bpm_text.setString(bpmstr);
             if (metronome_power)
@@ -747,6 +767,7 @@ int main()
             window.clear();
             background_sprite.draw(window);
             window.draw(metronome_top_text);
+            //metronome_top_text.draw(window);
             window.draw(metronome_bottom_text);
             metronome_beats_plus.draw(window);
             metronome_beats_minus.draw(window);
@@ -766,7 +787,7 @@ int main()
         {
            // RYSOWANIE
             window.clear();
-            window.draw(metronome_tabs_sprite);
+            metronome_tabs_sprite.draw(window);
             back_metronome_button.draw(window);
             window.display();
         }
@@ -819,8 +840,14 @@ int main()
             window.clear();
             //window.draw(background_clear_sprite);
             background_clear_sprite.draw(window);
+            fretboard_clear_sprite.draw(window);
             //window.draw(games_text);
             gamesingame_button.draw(window);
+            fretboard_fill_button.draw(window);
+            if(show_fr)
+            {
+                freatboard_filled_sprite.draw(window);
+            }
             window.display();
         }
 
