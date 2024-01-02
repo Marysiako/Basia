@@ -342,9 +342,11 @@ int main()
             // uzytkownik kliknal zamkniecie okna
             if (event.type == sf::Event::Closed)
                 window.close();
+                break;
             // zamknij okno po wcisnieciu escape
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
                 window.close();
+                break;
             // EVENTS MENU
             if (screen_number == 0)
             {
