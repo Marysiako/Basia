@@ -17,16 +17,17 @@ void FRET::draw(sf::RenderWindow& window)
 }
 void FRET::change_texture()
 {
-    if (opacity == 2)
+    if (opacity == 0)
     {
         opacity = 1;
         texture.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
         sprite.setTexture(texture);
     }
-    if (opacity == 0)
+    if (opacity == 1)
     {
         opacity = 0;
-        texture.create(0, 0);   //tworze pusta teksture
+        //texture.create(0, 0);   //tworze pusta teksture
+        texture.loadFromFile("graphic/fretop0.png");    //zrobic ta grafike
         sprite.setTexture(texture);
     }
 }

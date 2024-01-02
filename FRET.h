@@ -13,7 +13,10 @@ public:
     sf::Sprite sprite;
     void draw(sf::RenderWindow& window);
     void change_texture();
-    int opacity = 1;
+    int opacity = 0;
+    sf::FloatRect getSpriteGlobalBounds() {
+        return sprite.getGlobalBounds();
+    }
 private:
 
 };
