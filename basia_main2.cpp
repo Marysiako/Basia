@@ -731,6 +731,32 @@ int main()
                         }
                     }
                 }
+                if (event.type == sf::Event::MouseMoved)
+                {
+                    std::cout << "ruch" << std::endl;
+                for(int i = 0; i<96; i++)
+                {
+                    std::cout << "ruch" << i << std::endl;
+                 //tablicaObiektow[i].draw(window);
+                 sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
+                        if (frett.contains(float(event.mouseMove.x), (event.mouseMove.y)))
+                        {
+                            tablicaObiektow[i].opacity = 1;
+                            tablicaObiektow[i].change_texture();
+                            sf::Texture teks;
+                            teks.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
+                            tablicaObiektow[i].texture = teks;
+                            std::cout << "najechano na " << i << std::endl;
+                        }
+                        else{
+                            tablicaObiektow[i].opacity = 0;
+                            tablicaObiektow[i].change_texture();
+                            sf::Texture teks2;
+                            teks2.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
+                            tablicaObiektow[i].texture = teks2;
+                        }
+                }
+                }
                 
             }
 
