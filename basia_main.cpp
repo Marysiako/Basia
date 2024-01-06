@@ -210,7 +210,7 @@ int main()
 
     // FRETS FOR GAME 2
     FRET testowy_fret(57, 200, 50, 45, 101, "G");
-    FRET tablicaObiektow[] = {
+   /* FRET tablicaObiektow[] = {
         FRET(57, 200, 50, 45, 101, "Gis"),      //G
         FRET(107, 200, 55, 45, 102, "A"),
         FRET(162, 200, 55, 45, 103, "Ais"),
@@ -312,6 +312,7 @@ int main()
         FRET(931, 325, 35, 35, 424, "E"), //24
 
     };
+    */
     std::string tabFretNames[]{"e", "f", "fis"};
     //////////////
     /*
@@ -709,7 +710,7 @@ int main()
                     }
                 }
                 sf::FloatRect showw = fretboard_fill_button.getSpriteGlobalBounds();
-                if (showw.contains(float(event.mouseButton.x), (event.mouseButton.y)))
+                if (showw.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
                 {
                     if (event.type == sf::Event::MouseButtonPressed)
                     {
@@ -726,24 +727,29 @@ int main()
                         }
                     }
                 }
+                /*
                 if (event.type == sf::Event::MouseMoved)
                 {
+                    std::cout << "ruch" << std::endl;
                 for(int i = 0; i<96; i++)
                 {
+                    std::cout << "ruch" << i << std::endl;
                  //tablicaObiektow[i].draw(window);
                  sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
-                        if (frett.contains(float(event.mouseButton.x), (event.mouseButton.y)))
+                        if (frett.contains(float(event.mouseMove.x), (event.mouseMove.y)))
                         {
-                            tablicaObiektow[i].opacity = 1;
-                            tablicaObiektow[i].change_texture();
+                            //tablicaObiektow[i].opacity = 1;
+                            //tablicaObiektow[i].change_texture();
+                            std::cout << "najechano na " << i << std::endl;
                         }
                         else{
-                            tablicaObiektow[i].opacity = 0;
-                            tablicaObiektow[i].change_texture();
+                            //tablicaObiektow[i].opacity = 0;
+                            //tablicaObiektow[i].change_texture();
                         }
                         
                 }
                 }
+                */
             }
         }
 
@@ -961,10 +967,12 @@ int main()
             gamesingame_button.draw(window);
             fretboard_fill_button.draw(window);
             //testowy_fret.draw(window);
+            /*
             for(int i = 0; i<96; i++)
             {
                  tablicaObiektow[i].draw(window);
             }
+            */
             if (show_fr)
             {
                 freatboard_filled_sprite.draw(window);
