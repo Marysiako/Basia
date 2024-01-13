@@ -54,7 +54,7 @@ sf::Text guessedsound_text;
 //DO GAME 2
 bool show_fr = 0;
 std::string wylosowany_dzwiek = "E";
-sf::Text wylosowany_dzwiek;
+//sf::Text wylosowany_dzwiek;
 
 bool metronome_power = 1;
 std::thread metronomeThread;
@@ -64,6 +64,8 @@ const int SAMPLE_RATE = 44100;
 const int FRAME_SIZE = 1024;
 const double PI = 3.14159265358979323846;
 */
+
+
 
 // Inicjalizacja dzwiekow do metronomu
 void MetronomeThread() {
@@ -123,6 +125,28 @@ int main()
     }
     sf::Sound random_sound_sound;
     random_sound_sound.setBuffer(random_sound_buffer);
+    
+    //TUNER
+    //inicjalizacja dzwiekow
+    sf::SoundBuffer E_buffer;
+    E_buffer.loadFromFile("bass_sounds/e1.wav");
+    sf::Sound E_sound;
+    E_sound.setBuffer(E_buffer);
+
+    sf::SoundBuffer A_buffer;
+    A_buffer.loadFromFile("bass_sounds/a1.wav");
+    sf::Sound A_sound;
+    A_sound.setBuffer(A_buffer);
+
+    sf::SoundBuffer D_buffer;
+    D_buffer.loadFromFile("bass_sounds/d1.wav");
+    sf::Sound D_sound;
+    D_sound.setBuffer(D_buffer);
+
+    sf::SoundBuffer G_buffer;
+    G_buffer.loadFromFile("bass_sounds/g2.wav");
+    sf::Sound G_sound;
+    G_sound.setBuffer(G_buffer);
 
     // BUTTONS (CLASS - BUTTON.H, BUTTON.CPP)
     BUTTON tuner_button("tuner",160, 150, "big");
@@ -166,6 +190,17 @@ int main()
     line_texture.loadFromFile("graphic/line.png");
     sf::Sprite line_sprite(line_texture);
     line_sprite.setPosition(line_x, line_y);
+    sf::Texture play_sound_texture; 
+    play_sound_texture.loadFromFile("graphic/play_sound.png");
+    sf::Sprite play_E(play_sound_texture);
+    sf::Sprite play_A(play_sound_texture);
+    sf::Sprite play_D(play_sound_texture);
+    sf::Sprite play_G(play_sound_texture);
+    play_G.setPosition(380, 220);
+    play_D.setPosition(380, 280);
+    play_A.setPosition(380, 345);
+    play_E.setPosition(380, 410);
+
     // METRONOM
     sf::RectangleShape slider(sf::Vector2f(300, 5));    // Pasek suwaka
     slider.setPosition(345, 400);
@@ -413,6 +448,26 @@ int main()
                         if(backk.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             screen_number = 0;
+                        }
+                        sf::FloatRect ple = play_E.getGlobalBounds();
+                        if(ple.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            E_sound.play();
+                        }
+                        sf::FloatRect pla = play_A.getGlobalBounds();
+                        if(pla.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            A_sound.play();
+                        }
+                        sf::FloatRect pld = play_D.getGlobalBounds();
+                        if(pld.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            D_sound.play();
+                        }
+                        sf::FloatRect plg = play_G.getGlobalBounds();
+                        if(plg.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            G_sound.play();
                         }
                     }
                 }
@@ -812,6 +867,8 @@ int main()
         // TUNER
         if (screen_number == 1)
         {
+            //Pobieranie częstotliwości z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
+        /*
                            // NIE DZIALA MIKROFON
         frequency = GetFrequencyFromMicrophone();
         //frequency = getFrequency();
@@ -872,15 +929,19 @@ int main()
             line_x = W/2 + k*100;
             }
         }
-
-        line_sprite.setPosition(line_x, line_y);
+        */
+            line_sprite.setPosition(line_x, line_y);
             //drawing
             window.clear();
             background_sprite.draw(window);
             //window.draw(tuner_sprite);
             tuner_sprite.draw(window);
-            window.draw(line_sprite);
+            //window.draw(line_sprite);
             back_button.draw(window);
+            window.draw(play_E);
+            window.draw(play_A);
+            window.draw(play_D);
+            window.draw(play_G);
             window.display();
         }
         // TAB CREATOR
