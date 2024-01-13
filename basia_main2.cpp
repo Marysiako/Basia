@@ -51,7 +51,10 @@ std::string choosed_sound = "i";
 std::string guessedsound_string = "Do you know te sound?";
 sf::Text guessedsound_text;
 
+//DO GAME 2
 bool show_fr = 0;
+std::string wylosowany_dzwiek = "E";
+sf::Text wylosowany_dzwiek;
 
 bool metronome_power = 1;
 std::thread metronomeThread;
@@ -311,6 +314,7 @@ int main()
 
     };
     
+    std::string tablicaNazw[] = {"E", "F", "Fis", "G", "Gis", "A", "Ais", "B", "C", "Cis", "D", "Dis"};
     //////////////
     /*
     FrequencyRecorder recorder;
@@ -339,10 +343,18 @@ int main()
         {
             //uzytkownik kliknal zamkniecie okna
             if (event.type == sf::Event::Closed)
+            {
                 window.close();
+                break;
+            }
              //zamknij okno po wcisnieciu escape
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+            {
                 window.close();
+                break;
+            }
+                
+                
             // EVENTS MENU
             if (screen_number == 0)
             {
@@ -731,13 +743,12 @@ int main()
                         }
                     }
                 }
+                /*
                 if (event.type == sf::Event::MouseMoved)
                 {
-                    std::cout << "ruch" << std::endl;
                 for(int i = 0; i<96; i++)
                 {
                     std::cout << "ruch" << i << std::endl;
-                 //tablicaObiektow[i].draw(window);
                  sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
                         if (frett.contains(float(event.mouseMove.x), (event.mouseMove.y)))
                         {
@@ -747,17 +758,35 @@ int main()
                             teks.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
                             tablicaObiektow[i].texture = teks;
                             std::cout << "najechano na " << i << std::endl;
+            
                         }
                         else{
                             tablicaObiektow[i].opacity = 0;
                             tablicaObiektow[i].change_texture();
                             sf::Texture teks2;
-                            teks2.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
+                            teks2.loadFromFile("graphic/fretop0.png");    //zrobic ta grafike
                             tablicaObiektow[i].texture = teks2;
                         }
                 }
                 }
-                
+                */for(int i = 0; i<96; i++)
+                {
+
+               sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
+                if (frett.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
+                {
+                    if (event.type == sf::Event::MouseButtonPressed)
+                    {
+                        if (event.mouseButton.button == sf::Mouse::Left)
+                        {
+                            //tablicaObiektow[i].opacity = 1;
+                            tablicaObiektow[i].change_texture();
+                            
+                            std::cout << "najechano na " << i << std::endl;
+                        } 
+                    }
+                }    
+                }
             }
 
         }
@@ -969,6 +998,10 @@ int main()
         //Game 2
         if (screen_number == 52)
         {
+            int d = GiveRandomIndex(11);
+            std::string wylosowany_dzwiek = tablicaNazw[d];
+
+
             window.clear();
             //window.draw(background_clear_sprite);
             background_clear_sprite.draw(window);
