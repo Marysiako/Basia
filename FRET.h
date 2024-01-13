@@ -17,6 +17,7 @@ public:
     sf::FloatRect getSpriteGlobalBounds() {
         return sprite.getGlobalBounds();
     }
+    std::string name;
 private:
 
 };

@@ -350,6 +350,9 @@ int main()
     };
     
     std::string tablicaNazw[] = {"E", "F", "Fis", "G", "Gis", "A", "Ais", "B", "C", "Cis", "D", "Dis"};
+    std::string wybrananazwa = "X";
+    std::string los_game2 = tablicaNazw[GiveRandomIndex(12)];
+    BUTTON losuj_button("get new sound",160, 150, "big");
     //////////////
     /*
     FrequencyRecorder recorder;
@@ -649,7 +652,6 @@ int main()
 
                             int randomIndex_exac= GiveRandomIndex(3)+1;      // numer nagrania (kazdy dzwiek ma 3 wersje 1 2 3)
                             
-
                             random_sound_uget_string = "bass_sounds/"+sound_names[randomIndex_sound]+std::to_string(randomIndex_exac)+".wav";
                             random_sound_buffer.loadFromFile(random_sound_uget_string);
                             random_sound_sound.setBuffer(random_sound_buffer);
@@ -776,6 +778,11 @@ int main()
                         {
                             screen_number = 5;
                         }
+                        sf::FloatRect los = losuj_button.getSpriteGlobalBounds();
+                        if(los.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            los_game2 = tablicaNazw[GiveRandomIndex(12)];
+                        }
                         
                     }
 
@@ -824,7 +831,8 @@ int main()
                         }
                 }
                 }
-                */for(int i = 0; i<96; i++)
+                */
+               for(int i = 0; i<96; i++)
                 {
 
                sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
@@ -838,6 +846,8 @@ int main()
                             tablicaObiektow[i].change_texture();
                             
                             std::cout << "najechano na " << i << std::endl;
+                            wybrananazwa = tablicaObiektow[i].name;
+                            std::cout << wybrananazwa << std::endl;
                         } 
                     }
                 }    
@@ -1070,6 +1080,7 @@ int main()
             //window.draw(games_text);
             gamesingame_button.draw(window);
             fretboard_fill_button.draw(window);
+            losuj_button.draw(window);
             for(int i = 0; i<96; i++)
             {
                  tablicaObiektow[i].draw(window);
