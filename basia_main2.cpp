@@ -230,6 +230,7 @@ int main()
     bpm_text.setFont(font);
     bpm_text.setPosition(390, 280);
     bpm_text.setCharacterSize(80);
+
     //Games
     sf::Text games_text;
     games_text.setFont(font);
@@ -247,112 +248,134 @@ int main()
      // FRETS FOR GAME 2
     FRET testowy_fret(57, 200, 50, 45, 101, "G");
     FRET tablicaObiektow[] = {
-        FRET(57, 200, 50, 45, 101, "Gis"),      //G
+        FRET(57, 200, 50, 45, 101, "G#"),      //G
         FRET(107, 200, 55, 45, 102, "A"),
-        FRET(162, 200, 55, 45, 103, "Ais"),
+        FRET(162, 200, 55, 45, 103, "A#"),
         FRET(217, 200, 50, 45, 104, "B"),
         FRET(267, 200, 48, 45, 105, "C"),
-        FRET(315, 200, 45, 45, 106, "Cis"),
+        FRET(315, 200, 45, 45, 106, "C#"),
         FRET(360, 200, 40, 45, 107, "D"),
-        FRET(400, 200, 40, 45, 108, "Dis"),
+        FRET(400, 200, 40, 45, 108, "D#"),
         FRET(440, 200, 38, 45, 109, "E"),
         FRET(478, 200, 35, 45, 110, "F"), //10
-        FRET(513, 200, 30, 45, 111, "Fis"),
+        FRET(513, 200, 30, 45, 111, "F#"),
         FRET(543, 200, 32, 45, 112, "G"),
-        FRET(575, 200, 32, 45, 113, "Gis"),
+        FRET(575, 200, 32, 45, 113, "G#"),
         FRET(607, 200, 32, 45, 114, "A"),
-        FRET(639, 200, 35, 45, 115, "Ais"), //15
+        FRET(639, 200, 35, 45, 115, "A#"), //15
         FRET(674, 200, 33, 45, 116, "B"),
         FRET(707, 200, 33, 45, 117, "C"),
-        FRET(740, 200, 30, 45, 118, "Cis"),
+        FRET(740, 200, 30, 45, 118, "C#"),
         FRET(770, 200, 30, 45, 119, "D"),
-        FRET(800, 200, 35, 45, 120, "Dis"), //20
+        FRET(800, 200, 35, 45, 120, "D#"), //20
         FRET(835, 200, 34, 45, 121, "E"),
         FRET(869, 200, 30, 45, 122, "F"),
-        FRET(899, 200, 32, 45, 123, "Fis"),
+        FRET(899, 200, 32, 45, 123, "F#"),
         FRET(931, 200, 35, 45, 124, "G"), //24
 
-        FRET(57, 245, 50, 40, 201, "Dis"),    //D
+        FRET(57, 245, 50, 40, 201, "D#"),    //D
         FRET(107, 245, 55, 40, 202, "E"),
         FRET(162, 245, 55, 40, 203, "F"),
-        FRET(217, 245, 50, 40, 204, "Fis"),
+        FRET(217, 245, 50, 40, 204, "F#"),
         FRET(267, 245, 48, 40, 205, "G"),
-        FRET(315, 245, 45, 40, 206, "Gis"),
+        FRET(315, 245, 45, 40, 206, "G#"),
         FRET(360, 245, 40, 40, 207, "A"),
-        FRET(400, 245, 40, 40, 208, "Ais"),
+        FRET(400, 245, 40, 40, 208, "A#"),
         FRET(440, 245, 38, 40, 209, "B"),
         FRET(478, 245, 35, 40, 210, "C"), //10
-        FRET(513, 245, 30, 40, 211, "Cis"),
+        FRET(513, 245, 30, 40, 211, "C#"),
         FRET(543, 245, 32, 40, 212, "D"),
-        FRET(575, 245, 32, 40, 213, "Dis"),
+        FRET(575, 245, 32, 40, 213, "D#"),
         FRET(607, 245, 32, 40, 214, "E"),
         FRET(639, 245, 35, 40, 215, "F"), //15
-        FRET(674, 245, 33, 40, 216, "Fis"),
+        FRET(674, 245, 33, 40, 216, "F#"),
         FRET(707, 245, 33, 40, 217, "G"),
-        FRET(740, 245, 30, 40, 218, "Gis"),
+        FRET(740, 245, 30, 40, 218, "G#"),
         FRET(770, 245, 30, 40, 219, "A"),
-        FRET(800, 245, 35, 40, 220, "Ais"), //20
+        FRET(800, 245, 35, 40, 220, "A#"), //20
         FRET(835, 245, 34, 40, 221, "B"),
         FRET(869, 245, 30, 40, 222, "C"),
-        FRET(899, 245, 32, 40, 223, "Cis"),
+        FRET(899, 245, 32, 40, 223, "C#"),
         FRET(931, 245, 35, 40, 224, "D"), //24
 
-        FRET(57, 285, 50, 40, 301, "Ais"), //A
+        FRET(57, 285, 50, 40, 301, "A#"), //A
         FRET(107, 285, 55, 40, 302, "B"),
         FRET(162, 285, 55, 40, 303, "C"),
-        FRET(217, 285, 50, 40, 304, "Cis"),
+        FRET(217, 285, 50, 40, 304, "C#"),
         FRET(267, 285, 48, 40, 305, "D"),
-        FRET(315, 285, 45, 40, 306, "Dis"),
+        FRET(315, 285, 45, 40, 306, "D#"),
         FRET(360, 285, 40, 40, 307, "E"),
         FRET(400, 285, 40, 40, 308, "F"),
-        FRET(440, 285, 38, 40, 309, "Fis"),
+        FRET(440, 285, 38, 40, 309, "F#"),
         FRET(478, 285, 35, 40, 310, "G"), //10
-        FRET(513, 285, 30, 40, 311, "Gis"),
+        FRET(513, 285, 30, 40, 311, "G#"),
         FRET(543, 285, 32, 40, 312, "A"),
-        FRET(575, 285, 32, 40, 313, "Ais"),
+        FRET(575, 285, 32, 40, 313, "A#"),
         FRET(607, 285, 32, 40, 314, "B"),
         FRET(639, 285, 35, 40, 315, "C"), //15
-        FRET(674, 285, 33, 40, 316, "Cis"),
+        FRET(674, 285, 33, 40, 316, "C#"),
         FRET(707, 285, 33, 40, 317, "D"),
-        FRET(740, 285, 30, 40, 318, "Dis"),
+        FRET(740, 285, 30, 40, 318, "D#"),
         FRET(770, 285, 30, 40, 319, "E"),
         FRET(800, 285, 35, 40, 320, "F"), //20
-        FRET(835, 285, 34, 40, 321, "Fis"),
+        FRET(835, 285, 34, 40, 321, "F#"),
         FRET(869, 285, 30, 40, 322, "G"),
-        FRET(899, 285, 32, 40, 323, "Gis"),
+        FRET(899, 285, 32, 40, 323, "G#"),
         FRET(931, 285, 35, 40, 324, "A"), //24
 
         FRET(57, 325, 50, 35, 401, "F"),    //E
-        FRET(107, 325, 55, 35, 402, "Fis"),
+        FRET(107, 325, 55, 35, 402, "F#"),
         FRET(162, 325, 55, 35, 403, "G"),
-        FRET(217, 325, 50, 35, 404, "Gis"),
+        FRET(217, 325, 50, 35, 404, "G#"),
         FRET(267, 325, 48, 35, 405, "A"),
-        FRET(315, 325, 45, 35, 406, "Ais"),
+        FRET(315, 325, 45, 35, 406, "A#"),
         FRET(360, 325, 40, 35, 407, "B"),
         FRET(400, 325, 40, 35, 408, "C"),
-        FRET(440, 325, 38, 35, 409, "Cis"),
+        FRET(440, 325, 38, 35, 409, "C#"),
         FRET(478, 325, 35, 35, 410, "D"), //10
-        FRET(513, 325, 30, 35, 411, "Dis"),
+        FRET(513, 325, 30, 35, 411, "D#"),
         FRET(543, 325, 32, 35, 412, "E"),
         FRET(575, 325, 32, 35, 413, "F"),
-        FRET(607, 325, 32, 35, 414, "Fis"),
+        FRET(607, 325, 32, 35, 414, "F#"),
         FRET(639, 325, 35, 35, 415, "G"), //15
-        FRET(674, 325, 33, 35, 416, "Gis"),
+        FRET(674, 325, 33, 35, 416, "G#"),
         FRET(707, 325, 33, 35, 417, "A"),
-        FRET(740, 325, 30, 35, 418, "Ais"),
+        FRET(740, 325, 30, 35, 418, "A#"),
         FRET(770, 325, 30, 35, 419, "B"),
         FRET(800, 325, 35, 35, 420, "C"), //20
-        FRET(835, 325, 34, 35, 421, "Cis"),
+        FRET(835, 325, 34, 35, 421, "C#"),
         FRET(869, 325, 30, 35, 422, "D"),
-        FRET(899, 325, 32, 35, 423, "Dis"),
+        FRET(899, 325, 32, 35, 423, "D#"),
         FRET(931, 325, 35, 35, 424, "E"), //24
 
     };
     
-    std::string tablicaNazw[] = {"E", "F", "Fis", "G", "Gis", "A", "Ais", "B", "C", "Cis", "D", "Dis"};
-    std::string wybrananazwa = "X";
+    std::string tablicaNazw[] = {"E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#"};
+    std::string wybrananazwa = "";
+    //std::string informacja_zwrotna_g2 = "";
     std::string los_game2 = tablicaNazw[GiveRandomIndex(12)];
-    BUTTON losuj_button("get new sound",160, 150, "big");
+    int points_game2 = 0;
+    sf::Text text_los_game2;
+    text_los_game2.setFont(font);
+    text_los_game2.setPosition(50, 50);
+    text_los_game2.setCharacterSize(50);
+    text_los_game2.setFillColor(szary);
+    text_los_game2.setString("Find: "+los_game2);
+
+    sf::Text text_wybrananazwa;
+    text_wybrananazwa.setFont(font);
+    text_wybrananazwa.setPosition(450, 50);
+    text_wybrananazwa.setCharacterSize(50);
+    text_wybrananazwa.setFillColor(szary);
+    text_wybrananazwa.setString("You chose: "+wybrananazwa);
+
+    sf::Text text_points;
+    text_points.setFont(font);
+    text_points.setPosition(450, 450);
+    text_points.setCharacterSize(50);
+    text_points.setFillColor(szary);
+    text_points.setString("Points: "+std::to_string(points_game2));
+
     //////////////
     /*
     FrequencyRecorder recorder;
@@ -777,11 +800,11 @@ int main()
                         if(gamesin.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             screen_number = 5;
-                        }
-                        sf::FloatRect los = losuj_button.getSpriteGlobalBounds();
-                        if(los.contains(float(event.mouseButton.x),(event.mouseButton.y)))
-                        {
+                            points_game2 = 0;
+                            text_points.setString("Points: "+std::to_string(points_game2));
                             los_game2 = tablicaNazw[GiveRandomIndex(12)];
+                            text_los_game2.setString("Find: "+los_game2);
+                            text_wybrananazwa.setString("You chose: ");
                         }
                         
                     }
@@ -843,13 +866,29 @@ int main()
                         if (event.mouseButton.button == sf::Mouse::Left)
                         {
                             //tablicaObiektow[i].opacity = 1;
-                            tablicaObiektow[i].change_texture();
+                            //tablicaObiektow[i].change_texture();
                             
                             std::cout << "najechano na " << i << std::endl;
                             wybrananazwa = tablicaObiektow[i].name;
                             std::cout << wybrananazwa << std::endl;
+                            text_wybrananazwa.setString("You chose: "+wybrananazwa);
+
+                            if (wybrananazwa != los_game2)
+                            {   
+                                points_game2 = 0;
+                                text_points.setString("Points: "+std::to_string(points_game2));
+                            }
+                            else if (wybrananazwa == los_game2)
+                            {
+                                points_game2 = points_game2+1;
+                                text_points.setString("Points: "+std::to_string(points_game2));
+                                los_game2 = tablicaNazw[GiveRandomIndex(12)];
+                                text_los_game2.setString("Find: "+los_game2);
+                                text_wybrananazwa.setString("You chose: ");
+                            }
                         } 
                     }
+                    
                 }    
                 }
             }
@@ -1080,7 +1119,9 @@ int main()
             //window.draw(games_text);
             gamesingame_button.draw(window);
             fretboard_fill_button.draw(window);
-            losuj_button.draw(window);
+            window.draw(text_los_game2);
+            window.draw(text_wybrananazwa);
+            window.draw(text_points);
             for(int i = 0; i<96; i++)
             {
                  tablicaObiektow[i].draw(window);
