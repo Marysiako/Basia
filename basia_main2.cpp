@@ -88,7 +88,7 @@ void MetronomeThread() {
     while (metronome_power) {
         // Symulacja działania metronomu
         std::this_thread::sleep_for(std::chrono::milliseconds(60000 / tempo)); //dziele minute na liczbe uderzen
-        std::cout << "Click" << std::endl;
+        //std::cout << "Click" << std::endl;
         if(beatcounter >= beatsPerMeasure) // np 4 == 4
         {
             metronome_firstclick.play();
@@ -671,7 +671,7 @@ int main()
                         if(getsound.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             randomIndex_sound = GiveRandomIndex(11);    //dzwiek
-                            std::cout << sound_names[randomIndex_sound] << std::endl;
+                            //std::cout << sound_names[randomIndex_sound] << std::endl;
 
                             int randomIndex_exac= GiveRandomIndex(3)+1;      // numer nagrania (kazdy dzwiek ma 3 wersje 1 2 3)
                             
@@ -696,8 +696,8 @@ int main()
                                 abc_b_button.changeText(b_text);
                                 abc_c_button.changeText(c_text);
                                 
-                                std::cout << random_sound_uget_string;
-                                std::cout << "poz 1\n\n";
+                                //std::cout << random_sound_uget_string;
+                                //std::cout << "poz 1\n\n";
                             } 
                             if (randomIndex_position == 2)
                             {   
@@ -713,8 +713,8 @@ int main()
                                 abc_b_button.changeText(b_text);
                                 abc_c_button.changeText(c_text);
                                 
-                                std::cout << random_sound_uget_string;
-                                std::cout << "poz 2\n\n";
+                                //std::cout << random_sound_uget_string;
+                                //std::cout << "poz 2\n\n";
                             } 
                             if (randomIndex_position == 3)
                             {
@@ -730,8 +730,8 @@ int main()
                                 abc_b_button.changeText(b_text);
                                 abc_c_button.changeText(c_text);
                                 
-                                std::cout << random_sound_uget_string;
-                                std::cout << "poz 3\n\n";
+                                //std::cout << random_sound_uget_string;
+                                //std::cout << "poz 3\n\n";
                                 
                             } 
                         }
@@ -855,42 +855,38 @@ int main()
                 }
                 }
                 */
-               for(int i = 0; i<96; i++)
-                {
+               for (int i = 0; i < 96; i++)
+{
+    sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
+    if (frett.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
+    {
+        if (event.type == sf::Event::MouseButtonPressed)
+        {
+            if (event.mouseButton.button == sf::Mouse::Left)
+            {
+                //std::cout << "najechano na " << i << std::endl;
+                wybrananazwa = tablicaObiektow[i].name;
+               // std::cout << wybrananazwa << std::endl;
+                text_wybrananazwa.setString("You chose: " + wybrananazwa);
 
-               sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
-                if (frett.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
+                if (wybrananazwa != los_game2)
                 {
-                    if (event.type == sf::Event::MouseButtonPressed)
-                    {
-                        if (event.mouseButton.button == sf::Mouse::Left)
-                        {
-                            //tablicaObiektow[i].opacity = 1;
-                            //tablicaObiektow[i].change_texture();
-                            
-                            std::cout << "najechano na " << i << std::endl;
-                            wybrananazwa = tablicaObiektow[i].name;
-                            std::cout << wybrananazwa << std::endl;
-                            text_wybrananazwa.setString("You chose: "+wybrananazwa);
-
-                            if (wybrananazwa != los_game2)
-                            {   
-                                points_game2 = 0;
-                                text_points.setString("Points: "+std::to_string(points_game2));
-                            }
-                            else if (wybrananazwa == los_game2)
-                            {
-                                points_game2 = points_game2+1;
-                                text_points.setString("Points: "+std::to_string(points_game2));
-                                los_game2 = tablicaNazw[GiveRandomIndex(12)];
-                                text_los_game2.setString("Find: "+los_game2);
-                                text_wybrananazwa.setString("You chose: ");
-                            }
-                        } 
-                    }
-                    
-                }    
+                    points_game2 = 0;
+                    text_points.setString("Points: " + std::to_string(points_game2));
                 }
+                else if (wybrananazwa == los_game2)
+                {
+                    points_game2 = points_game2 + 1;
+                    text_points.setString("Points: " + std::to_string(points_game2));
+                    los_game2 = tablicaNazw[GiveRandomIndex(12)];
+                    text_los_game2.setString("Find: " + los_game2);
+                    text_wybrananazwa.setString("You chose: ");
+                }
+            }
+        }
+    }
+}
+
             }
 
         }

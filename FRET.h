@@ -12,8 +12,8 @@ public:
     sf::Texture texture;
     sf::Sprite sprite;
     void draw(sf::RenderWindow& window);
-    void change_texture();
-    int opacity = 0;
+    //void change_texture();
+    //int opacity = 0;
     sf::FloatRect getSpriteGlobalBounds() {
         return sprite.getGlobalBounds();
     }
