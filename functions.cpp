@@ -4,196 +4,121 @@
 #include <iostream>
 #include <vector>
 #include <SFML/Audio.hpp>
-#include <iostream>
 #include <cstdlib>
+
+#include <mutex>
 #include <fftw3.h>
-// 40 -312 hz
-const int SAMPLE_RATE = 44100;
-const int FRAME_SIZE = 1024;
-const double VOLUME_THRESHOLD = 0.001;  // Próg głośności
-//const int MIN_FREQUENCY = 10;
-//const int MAX_FREQUENCY = 400;
-/*
-double GetFrequencyFromMicrophone() {
-    PaError err;
-
-    // Inicjalizacja PortAudio
-    err = Pa_Initialize();
-    if (err != paNoError) {
-        std::cerr << "Błąd inicjalizacji PortAudio: " << Pa_GetErrorText(err) << std::endl;
-        return -1.0;
-    }
-
-    // Otwarcie strumienia wejściowego
-    PaStream *stream;
-    err = Pa_OpenDefaultStream(&stream, 1, 0, paFloat32, SAMPLE_RATE, FRAME_SIZE, NULL, NULL);
-    if (err != paNoError) {
-        std::cerr << "Błąd otwierania strumienia: " << Pa_GetErrorText(err) << std::endl;
-        return -1.0;
-    }
-
-    err = Pa_StartStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd uruchamiania strumienia: " << Pa_GetErrorText(err) << std::endl;
-        return -1.0;
-    }
-
-    std::vector<double> samples(FRAME_SIZE);
-
-    err = Pa_ReadStream(stream, samples.data(), FRAME_SIZE);
-    if (err != paNoError) {
-        std::cerr << "Błąd odczytu danych z mikrofonu: " << Pa_GetErrorText(err) << std::endl;
-        return -1.0;
-    }
-
-    fftw_complex* fftInput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * FRAME_SIZE);
-    fftw_complex* fftOutput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * FRAME_SIZE);
-
-    for (int i = 0; i < FRAME_SIZE; ++i) {
-        fftInput[i][0] = samples[i]; // Real part
-        fftInput[i][1] = 0.0;         // Imaginary part (assuming real input)
-    }
-
-    fftw_plan plan = fftw_plan_dft_1d(FRAME_SIZE, fftInput, fftOutput, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(plan);
-    fftw_destroy_plan(plan);
+#include <iomanip>
+#include <sstream>
 
 
-    // Szukanie dominujacej czestotliwosci
-    double maxMagnitude = 0.0;
-    int maxIndex = 0;
+//DO ODCZYTU CZESTOTLIWOSCI
+#define SAMPLE_RATE 44100   // czestotliwosc probkowania
+#define FRAMES_PER_BUFFER 256 // liczba probek na jeden callback
+#define BUFFER_SIZE 32768   // rozmiar bufora - nim wiekszy tym dokladniej
 
-    for (int i = 0; i < FRAME_SIZE; ++i) {
-        double magnitude = sqrt(fftOutput[i][0] * fftOutput[i][0] + fftOutput[i][1] * fftOutput[i][1]);
-        if (magnitude > maxMagnitude) {
-            maxMagnitude = magnitude;
-            maxIndex = i;
-        }
-    }
+// bufor na probki audio
+std::vector<float> g_samples(BUFFER_SIZE, 0.0f);
+std::mutex g_mutex;         // zabezpiecza przed jednoczesnym dostepem z dwoch watkow (zapiywaniem i czytaniem danych do wizualizacji wykresu)
 
-    double sampleRate = SAMPLE_RATE;
-    double frequency = (maxIndex * sampleRate) / FRAME_SIZE;
+// Callback PortAudio - obsluga (Ppobiera probke audio i zaspisuje do g_samples)
+static int audioCallback(const void *inputBuffer, void *, unsigned long framesPerBuffer,
+                         const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void *) {
+    const float *in = static_cast<const float*>(inputBuffer);
+    if (!in) return paContinue; // jesli jest cisza kontynuuj
 
-    // Zamykanie strumienia
-    err = Pa_StopStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd zatrzymywania strumienia: " << Pa_GetErrorText(err) << std::endl;
-    }
+    std::lock_guard<std::mutex> lock(g_mutex);  //lock_guard blokuje tylko na czas bycia w {} i sam odblokowuje
+    std::move(g_samples.begin() + framesPerBuffer, g_samples.end(), g_samples.begin()); //przesuwam w lewo o liczbe probek 
+    std::copy(in, in + framesPerBuffer, g_samples.end() - framesPerBuffer); //dodanie nowych danych na koniec bufora
 
-    err = Pa_CloseStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd zamykania strumienia: " << Pa_GetErrorText(err) << std::endl;
-    }
-
-    // Terminate PortAudio.
-    Pa_Terminate();
-
-    return frequency;
+    return paContinue;
 }
-*/
+PaStream* stream = nullptr;
 
-double GetFrequencyFromMicrophone() {
-    PaError err;
-
-    // Inicjalizacja PortAudio
-    err = Pa_Initialize();
+bool InitAudio() {
+    Pa_Initialize();
+    PaError err = Pa_OpenDefaultStream(&stream, 1, 0, paFloat32, SAMPLE_RATE,
+                                       FRAMES_PER_BUFFER, audioCallback, nullptr);
     if (err != paNoError) {
-        std::cerr << "Błąd inicjalizacji PortAudio: " << Pa_GetErrorText(err) << std::endl;
-        return -1.0;
+        std::cerr << "PortAudio error: " << Pa_GetErrorText(err) << "\n";
+        return false;
     }
+    Pa_StartStream(stream);
+    return true;
+}
 
-    // Otwarcie strumienia wejściowego
-    PaStream *stream;
-    err = Pa_OpenDefaultStream(&stream, 1, 0, paFloat32, SAMPLE_RATE, FRAME_SIZE, NULL, NULL);
-    if (err != paNoError) {
-        std::cerr << "Błąd otwierania strumienia: " << Pa_GetErrorText(err) << std::endl;
-        Pa_Terminate();
-        return -1.0;
-    }
-
-    err = Pa_StartStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd uruchamiania strumienia: " << Pa_GetErrorText(err) << std::endl;
-        Pa_CloseStream(stream);
-        Pa_Terminate();
-        return -1.0;
-    }
-
-    // Odczyt danych z mikrofonu
-    std::vector<float> samples(FRAME_SIZE);
-    err = Pa_ReadStream(stream, samples.data(), FRAME_SIZE);
-    if (err != paNoError) {
-        std::cerr << "Błąd odczytu danych z mikrofonu: " << Pa_GetErrorText(err) << std::endl;
+void CloseAudio() {
+    if (stream) {
         Pa_StopStream(stream);
         Pa_CloseStream(stream);
-        Pa_Terminate();
-        return -1.0;
     }
-
-    // Sprawdzanie głośności
-    double volume = 0.0;
-    for (int i = 0; i < FRAME_SIZE; ++i) {
-        volume += std::abs(samples[i]);
-    }
-    volume /= FRAME_SIZE;
-
-    if (volume < VOLUME_THRESHOLD) {
-        std::cout << "Brak wystarczającej głośności." << std::endl;
-        Pa_StopStream(stream);
-        Pa_CloseStream(stream);
-        Pa_Terminate();
-        return -1.0;
-    }
-
-    // Przygotowanie danych do FFT
-    fftw_complex* fftInput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * FRAME_SIZE);
-    fftw_complex* fftOutput = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * FRAME_SIZE);
-
-    for (int i = 0; i < FRAME_SIZE; ++i) {
-        fftInput[i][0] = samples[i]; // Część rzeczywista
-        fftInput[i][1] = 0.0;         // Część urojona (dla danych rzeczywistych)
-    }
-
-    // Wykonanie FFT
-    fftw_plan plan = fftw_plan_dft_1d(FRAME_SIZE, fftInput, fftOutput, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(plan);
-    fftw_destroy_plan(plan);
-
-    // Znalezienie dominującej częstotliwości
-    double maxMagnitude = 0.0;
-    int maxIndex = 0;
-
-    for (int i = 0; i < FRAME_SIZE; ++i) {
-        double magnitude = sqrt(fftOutput[i][0] * fftOutput[i][0] + fftOutput[i][1] * fftOutput[i][1]);
-        if (magnitude > maxMagnitude) {
-            maxMagnitude = magnitude;
-            maxIndex = i;
-        }
-    }
-
-    double sampleRate = SAMPLE_RATE;
-    double frequency = (maxIndex * sampleRate) / FRAME_SIZE;
-
-    // Zamknięcie strumienia
-    err = Pa_StopStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd zatrzymywania strumienia: " << Pa_GetErrorText(err) << std::endl;
-    }
-
-    err = Pa_CloseStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Błąd zamykania strumienia: " << Pa_GetErrorText(err) << std::endl;
-    }
-
-    // Zwolnienie pamięci
-    fftw_free(fftInput);
-    fftw_free(fftOutput);
-
-    // Zakończenie PortAudio.
     Pa_Terminate();
-
-    return frequency;
 }
+float GetFrequencyFromMicrophone() {
+
+        // ------ FFT setup ------
+    std::vector<float> fft_in(BUFFER_SIZE);
+    std::vector<float> fft_mag(BUFFER_SIZE / 2); //wektor na magnitudy po transformacji /2 bo polowa taka sama
+    fftwf_complex* fft_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (BUFFER_SIZE/2 + 1)); 
+    fftwf_plan plan = fftwf_plan_dft_r2c_1d(BUFFER_SIZE, fft_in.data(), fft_out, FFTW_ESTIMATE);
+
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            fft_in = g_samples;
+        }
+
+        // okna Hanninga - wygladzenie poczatku i konca probki zeby mialy wartosc 0 zeby wyeliminowac falszywe czestotliwosci
+        for (int i = 0; i < BUFFER_SIZE; i++)
+            fft_in[i] *= 0.5f * (1 - cos(2 * M_PI * i / (BUFFER_SIZE - 1)));
+
+        // ------ FFT ------
+        fftwf_execute(plan);
+
+        // Obliczenie modulu widma
+        for (int i = 0; i < BUFFER_SIZE / 2; i++) {
+            fft_mag[i] = std::sqrt(                 //pierwiastek z(Re^2 + Im^2) czyli faktyczna amplituda/magnituda
+                fft_out[i][0] * fft_out[i][0] +
+                fft_out[i][1] * fft_out[i][1]
+            );
+        }
+
+        // Maksymalna amplituda do ustalenia progu
+        float maxMag = *std::max_element(fft_mag.begin(), fft_mag.end());
+        float threshold = maxMag * 0.15f; //prog 15% od maksymalnej amplitudy - ignoruje szumy
+
+        int firstPeakIndex = 0;
+        float prevVal = 0.0f;
+        bool found = false;
+
+        // Szukam pierwszego wyraznego piku ponizej 200 Hz (ograniczam zakres dla basu)
+        for (int i = 1; i < BUFFER_SIZE / 2; i++) {
+            float freq = i * (float)SAMPLE_RATE / BUFFER_SIZE; //obliczenie odpowiadajacej kazdemu i czestotliwosci
+            if (freq > 200.0f) break; // nie interesuja mnie wyzsze harmoniczne
+
+            // Detektor lokalnego maksimum powyzej progu czyli pierwszego silnego piku (wiekszy niz prog, rosnie i wiekszy niz nastepny)
+            if (fft_mag[i] > threshold && fft_mag[i] > prevVal &&
+                fft_mag[i] > fft_mag[i + 1]) {
+                firstPeakIndex = i;
+                found = true;
+                break;
+            }
+            prevVal = fft_mag[i];
+        }
+
+        // Jesli nie znaleziono pierwszego piku, wez najwyzszy
+        if (!found) {
+            firstPeakIndex = std::distance(     //distance zwraca index maximum
+                fft_mag.begin(),
+                std::max_element(fft_mag.begin(), fft_mag.begin() + BUFFER_SIZE / 2)
+            );
+        }
+
+        float dominantFreq = firstPeakIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
+        fftwf_destroy_plan(plan);
+        fftwf_free(fft_out);
+        return dominantFreq;
+}
+    
 
 int GiveRandomIndex(int i)
 {

@@ -6,9 +6,8 @@
 #include <iostream>
 #include <cstdlib>
 
-//double CalculateFrequency(const std::vector<double>& samples);
-double GetFrequencyFromMicrophone();
+bool InitAudio();
+void CloseAudio();
+float GetFrequencyFromMicrophone();
 int GiveRandomIndex(int i);
-//int RecordCallback(const void* inputBuffer, void* outputBuffer, unsigned long framesPerBuffer,
- //                  const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData); 
 #endif
