@@ -16,6 +16,7 @@ TAK DZIALA:
 #include <SFML/Audio.hpp>
 #include <thread>
 #include <chrono>
+#include <fstream>
 
 #include <portaudio.h>
 
@@ -175,7 +176,20 @@ std::vector<Note>  findMatchingNote(float freq) {
     }
     return matchingNotes;
 }
+void saveTabToFile(const TabFrame& tab, const std::string& filename) {
+    std::ofstream outFile(filename); 
+    if (!outFile) {
+        std::cerr << "Nie można otworzyć pliku do zapisu!\n";
+        return;
+    }
 
+    outFile << tab.E << "\n";
+    outFile << tab.A << "\n";
+    outFile << tab.D << "\n";
+    outFile << tab.G << "\n";
+
+    outFile.close(); 
+}
 int main()
 {
     if (!InitAudio()) {
@@ -612,6 +626,7 @@ int main()
                         {
                             //zapisuje aktualny stan myTabs i zapisuje do pliku txt
                             tabCreatorRunning = false;
+                            saveTabToFile(myTabs, "moja_tabulaturaBasia");
                         }
                     }
                     if(event.mouseButton.button == sf::Mouse::Left)
