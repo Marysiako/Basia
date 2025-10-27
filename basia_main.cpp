@@ -50,13 +50,13 @@ int game = 0;
 // DO TUNER
 double frequency = 1;
 
-// DO METRONOM
+// DO METRONOM------------------------------------------------------------------------------
 int tempo = 120; // Tempo (bpm)
 int beatsPerMeasure = 4; // Liczba taktów w metrum, uderzenia na miare
 int note = 4;       // 2 - cwierc nuta      4 - pol nuta    8- cala nuta 16 -
 int beatcounter = 4;    // Ustawiam jako liczbe taktow w metrum
 
-//DO GAMES1
+//DO GAMES1---------------------------------------------------------------------------------
 int randomIndex_sound = 1;
 std::string random_sound_uget_string = "bass_sounds/e3.wav";
 //SOUND random_sound_uget(random_sound_uget_string);
@@ -65,12 +65,12 @@ sf::SoundBuffer random_sound_buffer;
 std::string choosed_sound = "i";
 std::string guessedsound_string = "Do you know the sound?";
 
-
-//DO GAME 2
+//DO GAME 2 ---------------------------------------------------------------------------------
 bool show_fr = 0;
 std::string wylosowany_dzwiek = "E";
 //sf::Text wylosowany_dzwiek;
 
+//DO METRONOMU -----------------------------------------------------------------------------
 bool metronome_power = 1;
 std::thread metronomeThread;
 
@@ -108,7 +108,7 @@ void MetronomeThread() {
         }
     }
 }
-
+//DO TUNER I TAB CREATOR -------------------------------------------------------------------
 //DRUGI WATEK ODCZYTUJACY CZESTOTLIWOSC
 std::atomic<float> currentFreq{0.0f};
 std::atomic<bool> running{true};
@@ -122,7 +122,7 @@ void tunerThread() {
 sf::SoundBuffer E_buffer, A_buffer, D_buffer, G_buffer;
 sf::Sound E_sound, A_sound, D_sound, G_sound;
 
-//TAB CREATOR
+//TAB CREATOR---------------------------------------
 struct Note {
     char stringName;
     float frequency;
@@ -160,6 +160,7 @@ struct TabFrame {
     std::string D = "D|-";
     std::string G = "G|-";
 };
+TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
 // FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci
 std::vector<Note>  findMatchingNote(float freq) {
     std::vector<Note> matchingNotes;
@@ -238,6 +239,21 @@ int main()
     BUTTON abc_a_button(a_text, 200, 350, "medium");
     BUTTON abc_b_button(b_text, 400, 350, "medium");
     BUTTON abc_c_button(c_text, 600, 350, "medium");
+
+    //TAB CREATOR
+    BUTTON tabCreatorStartButton("start", 100, 50, "small");
+    BUTTON tabCreatorStopButton("stop", 200, 50, "small");
+    BUTTON tabCreatorSaveButton("save", 700, 50, "small");
+    BUTTON tabCreatorResetButton("reset", 800, 50, "small");
+    bool tabCreatorRunning = false;
+    sf::Text tabCreatorEText("E", font, 15);
+    tabCreatorEText.setPosition(10, 100);
+    sf::Text tabCreatorAText("A", font, 15);
+    tabCreatorAText.setPosition(10, 150);
+    sf::Text tabCreatorDText("D", font, 15);
+    tabCreatorDText.setPosition(10, 200);
+    sf::Text tabCreatorGText("G", font, 15);
+    tabCreatorGText.setPosition(10, 250);
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -475,7 +491,6 @@ int main()
                 break;
             }
                 
-                
             // EVENTS MENU
             if (screen_number == 0)
             {
@@ -569,6 +584,51 @@ int main()
                         if(backk.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             screen_number = 0;
+                            tabCreatorRunning = false;
+                        }
+                    }
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect s = tabCreatorStartButton.getSpriteGlobalBounds();
+                        if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            //myTabs zeruje i zaczyna leciec petla zapisujaca dzwieki
+                            tabCreatorRunning = true;
+                        }
+                    }
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect s = tabCreatorStopButton.getSpriteGlobalBounds();
+                        if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            //przestaje czytac dzwieki
+                            tabCreatorRunning = false;
+                        }
+                    }
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect s = tabCreatorSaveButton.getSpriteGlobalBounds();
+                        if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            //zapisuje aktualny stan myTabs i zapisuje do pliku txt
+                            tabCreatorRunning = false;
+                        }
+                    }
+                    if(event.mouseButton.button == sf::Mouse::Left)
+                    {
+                        sf::FloatRect s = tabCreatorResetButton.getSpriteGlobalBounds();
+                        if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            //zapisuje aktualny stan myTabs i zapisuje do pliku txt
+                            tabCreatorRunning = false;
+                            myTabs.E = "E|";
+                            myTabs.A = "A|";
+                            myTabs.D = "D|";
+                            myTabs.G = "G|";
+                            tabCreatorEText.setString(myTabs.E);
+                            tabCreatorAText.setString(myTabs.A);
+                            tabCreatorDText.setString(myTabs.D);
+                            tabCreatorGText.setString(myTabs.G);    
                         }
                     }
                 }
@@ -888,65 +948,37 @@ int main()
                         }
                     }
                 }
-                /*
-                if (event.type == sf::Event::MouseMoved)
-                {
-                for(int i = 0; i<96; i++)
-                {
-                    std::cout << "ruch" << i << std::endl;
-                 sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
-                        if (frett.contains(float(event.mouseMove.x), (event.mouseMove.y)))
-                        {
-                            tablicaObiektow[i].opacity = 1;
-                            tablicaObiektow[i].change_texture();
-                            sf::Texture teks;
-                            teks.loadFromFile("graphic/fretop1.png");    //zrobic ta grafike
-                            tablicaObiektow[i].texture = teks;
-                            std::cout << "najechano na " << i << std::endl;
-            
-                        }
-                        else{
-                            tablicaObiektow[i].opacity = 0;
-                            tablicaObiektow[i].change_texture();
-                            sf::Texture teks2;
-                            teks2.loadFromFile("graphic/fretop0.png");    //zrobic ta grafike
-                            tablicaObiektow[i].texture = teks2;
-                        }
-                }
-                }
-                */
                for (int i = 0; i < 96; i++)
-{
-    sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
-    if (frett.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
-    {
-        if (event.type == sf::Event::MouseButtonPressed)
-        {
-            if (event.mouseButton.button == sf::Mouse::Left)
-            {
-                //std::cout << "najechano na " << i << std::endl;
-                wybrananazwa = tablicaObiektow[i].name;
-               // std::cout << wybrananazwa << std::endl;
-                text_wybrananazwa.setString("You chose: " + wybrananazwa);
-
-                if (wybrananazwa != los_game2)
                 {
-                    points_game2 = 0;
-                    text_points.setString("Points: " + std::to_string(points_game2));
-                }
-                else if (wybrananazwa == los_game2)
-                {
-                    points_game2 = points_game2 + 1;
-                    text_points.setString("Points: " + std::to_string(points_game2));
-                    los_game2 = tablicaNazw[GiveRandomIndex(12)];
-                    text_los_game2.setString("Find: " + los_game2);
-                    text_wybrananazwa.setString("You chose: ");
-                }
-            }
-        }
-    }
-}
+                    sf::FloatRect frett = tablicaObiektow[i].getSpriteGlobalBounds();
+                    if (frett.contains(float(event.mouseButton.x), float(event.mouseButton.y)))
+                    {
+                        if (event.type == sf::Event::MouseButtonPressed)
+                        {
+                            if (event.mouseButton.button == sf::Mouse::Left)
+                            {
+                                //std::cout << "najechano na " << i << std::endl;
+                                wybrananazwa = tablicaObiektow[i].name;
+                            // std::cout << wybrananazwa << std::endl;
+                                text_wybrananazwa.setString("You chose: " + wybrananazwa);
 
+                                if (wybrananazwa != los_game2)
+                                {
+                                    points_game2 = 0;
+                                    text_points.setString("Points: " + std::to_string(points_game2));
+                                }
+                                else if (wybrananazwa == los_game2)
+                                {
+                                    points_game2 = points_game2 + 1;
+                                    text_points.setString("Points: " + std::to_string(points_game2));
+                                    los_game2 = tablicaNazw[GiveRandomIndex(12)];
+                                    text_los_game2.setString("Find: " + los_game2);
+                                    text_wybrananazwa.setString("You chose: ");
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
         }
@@ -978,35 +1010,35 @@ int main()
             //std::cout << "czestotliwosc: " << freq << "\n";
             //Pobieranie czestotliwosci z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
         
-        // E = 41.20Hz, A = 55Hz, D = 73.42H, G = 98Hz
-        // E - 36,41,46,   A - 50,55,60, D - 68,73,80 G - 93,98,103
-        if (freq >= 35 && freq < 48)   //E
-        {
-            line_y = 405;
-            float k = 41-freq;
-            line_x = W/2 - k*10;
-        }
-        else if (freq >= 48 && freq < 62)  //A
-        {
-            line_y = 340;
-            float k = 55-freq;
-            line_x = W/2 - k*10;
+            // E = 41.20Hz, A = 55Hz, D = 73.42H, G = 98Hz
+            // E - 36,41,46,   A - 50,55,60, D - 68,73,80 G - 93,98,103
+            if (freq >= 35 && freq < 48)   //E
+            {
+                line_y = 405;
+                float k = 41-freq;
+                line_x = W/2 - k*10;
+            }
+            else if (freq >= 48 && freq < 62)  //A
+            {
+                line_y = 340;
+                float k = 55-freq;
+                line_x = W/2 - k*10;
 
-        }
-        else if (freq >= 62 && freq < 80)   //D
-        {
-            line_y = 278;
-            float k = 74-freq;
-            line_x = W/2 - k*10;
+            }
+            else if (freq >= 62 && freq < 80)   //D
+            {
+                line_y = 278;
+                float k = 74-freq;
+                line_x = W/2 - k*10;
 
-        }
-        else if (freq >= 80 && freq < 105)  //G
-        {
-            line_y = 223;
-            float k = 98-freq;
-            line_x = W/2 - k*10;
+            }
+            else if (freq >= 80 && freq < 105)  //G
+            {
+                line_y = 223;
+                float k = 98-freq;
+                line_x = W/2 - k*10;
 
-        }
+            }
         
             line_sprite.setPosition(line_x, line_y);
             //drawing
@@ -1028,13 +1060,30 @@ int main()
         // TAB CREATOR
         if (screen_number == 2)
         {
-                               // NIE DZIALA MIKROFON
-
-            //frequency = GetFrequencyFromMicrophone();
-            //std::cout << "czestotliwosc: " << frequency << "\n";
+            if (tabCreatorRunning){
+                float freq = currentFreq;
+                myTabs.E += "-";
+                myTabs.A += "-";
+                myTabs.D += "-";
+                myTabs.G += "-";
+                tabCreatorEText.setString(myTabs.E);
+                tabCreatorAText.setString(myTabs.A);
+                tabCreatorDText.setString(myTabs.D);
+                tabCreatorGText.setString(myTabs.G);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500)); //zeby nie lecialo za szybko i sie nie wieszalo
+            }
+            
             //drawing
             window.clear();
-            background_cs_sprite.draw(window);
+            background_sprite.draw(window);
+            tabCreatorStartButton.draw(window);
+            tabCreatorStopButton.draw(window);
+            tabCreatorSaveButton.draw(window);
+            tabCreatorResetButton.draw(window);
+            window.draw(tabCreatorEText);
+            window.draw(tabCreatorAText);
+            window.draw(tabCreatorDText);
+            window.draw(tabCreatorGText);
             back_button.draw(window);
             window.display();
         }
@@ -1103,7 +1152,6 @@ int main()
             back_button.draw(window);
             window.display();
         }
-
         // GAMES
         if (screen_number == 5)
         {
