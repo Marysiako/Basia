@@ -63,8 +63,8 @@ std::string random_sound_uget_string = "bass_sounds/e3.wav";
 sf::SoundBuffer random_sound_buffer;
 
 std::string choosed_sound = "i";
-std::string guessedsound_string = "Do you know te sound?";
-sf::Text guessedsound_text;
+std::string guessedsound_string = "Do you know the sound?";
+
 
 //DO GAME 2
 bool show_fr = 0;
@@ -121,6 +121,59 @@ void tunerThread() {
 }
 sf::SoundBuffer E_buffer, A_buffer, D_buffer, G_buffer;
 sf::Sound E_sound, A_sound, D_sound, G_sound;
+
+//TAB CREATOR
+struct Note {
+    char stringName;
+    float frequency;
+    int fret;
+};
+std::vector<Note> notes = {
+    // E string (E1 = 41.20 Hz)
+    {'E', 41.20, 0}, {'E', 43.65, 1}, {'E', 46.25, 2}, {'E', 49.00, 3}, {'E', 51.91, 4},
+    {'E', 55.00, 5}, {'E', 58.27, 6}, {'E', 61.74, 7}, {'E', 65.41, 8}, {'E', 69.30, 9},
+    {'E', 73.42, 10}, {'E', 77.78, 11}, {'E', 82.41, 12}, {'E', 87.31, 13}, {'E', 92.50, 14},
+    {'E', 98.00, 15}, {'E', 103.83, 16}, {'E', 110.00, 17}, {'E', 116.54, 18}, {'E', 123.47, 19}, 
+
+    // A string (A1 = 55.00 Hz)
+    {'A', 55.00, 0}, {'A', 58.27, 1}, {'A', 61.74, 2}, {'A', 65.41, 3}, {'A', 69.30, 4},
+    {'A', 73.42, 5}, {'A', 77.78, 6}, {'A', 82.41, 7}, {'A', 87.31, 8}, {'A', 92.50, 9},
+    {'A', 98.00, 10}, {'A', 103.83, 11}, {'A', 110.00, 12}, {'A', 116.54, 13}, {'A', 123.47, 14},
+    {'A', 130.81, 15}, {'A', 138.59, 16}, {'A', 146.83, 17}, {'A', 155.56, 18}, {'A', 164.81, 19},
+
+    // D string (D2 = 73.42 Hz)
+    {'D', 73.42, 0}, {'D', 77.78, 1}, {'D', 82.41, 2}, {'D', 87.31, 3}, {'D', 92.50, 4},
+    {'D', 98.00, 5}, {'D', 103.83, 6}, {'D', 110.00, 7}, {'D', 116.54, 8}, {'D', 123.47, 9},
+    {'D', 130.81, 10}, {'D', 138.59, 11}, {'D', 146.83, 12}, {'D', 155.56, 13}, {'D', 164.81, 14},
+    {'D', 174.61, 15}, {'D', 185.00, 16}, {'D', 196.00, 17}, {'D', 207.65, 18}, {'D', 220.00, 19},
+
+    // G string (G2 = 98.00 Hz)
+    {'G', 98.00, 0}, {'G', 103.83, 1}, {'G', 110.00, 2}, {'G', 116.54, 3}, {'G', 123.47, 4},
+    {'G', 130.81, 5}, {'G', 138.59, 6}, {'G', 146.83, 7}, {'G', 155.56, 8}, {'G', 164.81, 9},
+    {'G', 174.61, 10}, {'G', 185.00, 11}, {'G', 196.00, 12}, {'G', 207.65, 13}, {'G', 220.00, 14},
+    {'G', 233.08, 15}, {'G', 246.94, 16}, {'G', 261.63, 17}, {'G', 277.18, 18}, {'G', 293.66, 19}
+
+};
+struct TabFrame {
+    std::string E = "E|-";
+    std::string A = "A|-";
+    std::string D = "D|-";
+    std::string G = "G|-";
+};
+// FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci
+std::vector<Note>  findMatchingNote(float freq) {
+    std::vector<Note> matchingNotes;
+    float minDiff = 1.0;
+
+    for (const auto& note : notes) {
+        float diff = std::abs(note.frequency - freq);
+        if (diff < minDiff) {
+            minDiff = diff;
+            matchingNotes.push_back(note);
+        }
+    }
+    return matchingNotes;
+}
 
 int main()
 {
@@ -259,6 +312,7 @@ int main()
     games_text.setPosition(370, 20);
     games_text.setFillColor(szary);
     
+    sf::Text guessedsound_text;
     guessedsound_text.setFont(font);
     guessedsound_text.setString(guessedsound_string);
     guessedsound_text.setCharacterSize(40);
@@ -922,7 +976,7 @@ int main()
             float freq = currentFreq;
             freqText.setString("Czestotliwosc: " + std::to_string(freq));
             //std::cout << "czestotliwosc: " << freq << "\n";
-            //Pobieranie częstotliwości z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
+            //Pobieranie czestotliwosci z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
         
         // E = 41.20Hz, A = 55Hz, D = 73.42H, G = 98Hz
         // E - 36,41,46,   A - 50,55,60, D - 68,73,80 G - 93,98,103
