@@ -43,24 +43,6 @@ TAK DZIALA:
 #define FRAMES_PER_BUFFER 256 // liczba probek na jeden callback
 #define BUFFER_SIZE 32768   // rozmiar bufora - nim wiekszy tym dokladniej
 
-/*
-// bufor na probki audio
-std::vector<float> g_samples(BUFFER_SIZE, 0.0f);
-std::mutex g_mutex;         // zabezpiecza przed jednoczesnym dostepem z dwoch watkow (zapiywaniem i czytaniem danych do wizualizacji wykresu)
-
-// Callback PortAudio - obsluga (Ppobiera probke audio i zaspisuje do g_samples)
-static int audioCallback(const void *inputBuffer, void *, unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void *) {
-    const float *in = static_cast<const float*>(inputBuffer);
-    if (!in) return paContinue; // jesli jest cisza kontynuuj
-
-    std::lock_guard<std::mutex> lock(g_mutex);  //lock_guard blokuje tylko na czas bycia w {} i sam odblokowuje
-    std::move(g_samples.begin() + framesPerBuffer, g_samples.end(), g_samples.begin()); //przesuwam w lewo o liczbe probek 
-    std::copy(in, in + framesPerBuffer, g_samples.end() - framesPerBuffer); //dodanie nowych danych na koniec bufora
-
-    return paContinue;
-}
-*/
 const int W = 1000;
 const int H = 600;
 int screen_number = 0; // 0-MENU, 1-TUNER, 2-TAB CREATOR, 3-METRONOME, 4-EFFECTS, 5-GAMES
@@ -228,9 +210,15 @@ int main()
 
 
     std::thread tuner(tunerThread); //odpalenie watku odczytu czestotliwosci
+    //W TUNER
     sf::Text freqText("", font, 20);
     freqText.setFillColor(sf::Color::Red);
     freqText.setPosition(10, 10);
+
+    sf::Text freqEADGText("", font, 20);
+    freqEADGText.setFillColor(sf::Color::Red);
+    freqEADGText.setPosition(10, 550);
+    freqEADGText.setString("E = 41.20Hz, A = 55Hz, D = 73.42H, G = 98Hz");
 
     //---------------------------------------------------------------------
     // METRONOM
@@ -936,59 +924,34 @@ int main()
             //std::cout << "czestotliwosc: " << freq << "\n";
             //Pobieranie częstotliwości z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
         
-        
+        // E = 41.20Hz, A = 55Hz, D = 73.42H, G = 98Hz
         // E - 36,41,46,   A - 50,55,60, D - 68,73,80 G - 93,98,103
-        if(freq<47 && freq> 35)   //E
+        if (freq >= 35 && freq < 48)   //E
         {
             line_y = 405;
             float k = 41-freq;
-            if(k>0)
-            {
-                line_x = W/2 - k*10;
-            }
-            else
-            {
-            line_x = W/2 + k*10;
-            }
+            line_x = W/2 - k*10;
         }
-        if(freq<61 && freq>49)   //A
+        else if (freq >= 48 && freq < 62)  //A
         {
             line_y = 340;
             float k = 55-freq;
-            if(k>0)
-            {
-                line_x = W/2 - k*10;
-            }
-            else
-            {
-            line_x = W/2 + k*10;
-            }
+            line_x = W/2 - k*10;
+
         }
-        if(freq<79 && freq>67)   //D
+        else if (freq >= 62 && freq < 80)   //D
         {
             line_y = 278;
             float k = 74-freq;
-            if(k>0)
-            {
-                line_x = W/2 - k*10;
-            }
-            else
-            {
-            line_x = W/2 + k*10;
-            }
+            line_x = W/2 - k*10;
+
         }
-        if(freq<104 && freq>72)   //G
+        else if (freq >= 80 && freq < 105)  //G
         {
             line_y = 223;
             float k = 98-freq;
-            if(k>0)
-            {
-                line_x = W/2 - k*10;
-            }
-            else
-            {
-            line_x = W/2 + k*10;
-            }
+            line_x = W/2 - k*10;
+
         }
         
             line_sprite.setPosition(line_x, line_y);
@@ -1005,6 +968,7 @@ int main()
             window.draw(play_G);
             window.draw(line_sprite);
             window.draw(freqText);
+            window.draw(freqEADGText);
             window.display();
         }
         // TAB CREATOR
