@@ -1,5 +1,5 @@
 /*
-TEN TEST POPRAWNIE ODCZYTUJE CZESTOTLIWOSCI DZWIEKOW GRANYCH NA GITARZE BASOWEJ
+TEN TEST POPRAWNIE ODCZYTUJE CZESTOTLIWOSCI ORAZ GLOSNOSC DZWIEKOW GRANYCH NA GITARZE BASOWEJ
 ORAZ POKAZUJE NA BIERZACO GRANA FALE DZWIEKOWA I PIK PO FFT
 
 KOMPILOWANIE
@@ -39,6 +39,7 @@ static int audioCallback(const void *inputBuffer, void *, unsigned long framesPe
     return paContinue;
 }
 
+
 int main() {
     // ------ PortAudio ------
     Pa_Initialize();
@@ -63,6 +64,10 @@ int main() {
     freqText.setFillColor(sf::Color::Red);
     freqText.setPosition(10, 10);
 
+    sf::Text volText("", font, 20);
+    volText.setFillColor(sf::Color::Green);
+    volText.setPosition(10, 40);
+
     // ------ FFT setup ------
     std::vector<float> fft_in(BUFFER_SIZE);
     std::vector<float> fft_mag(BUFFER_SIZE / 2); //wektor na magnitudy po transformacji /2 bo polowa taka sama
@@ -74,10 +79,30 @@ int main() {
         while (window.pollEvent(event))
             if (event.type == sf::Event::Closed) window.close();
 
+        // Pobranie probek -------------------------------
         {
             std::lock_guard<std::mutex> lock(g_mutex);
             fft_in = g_samples;
         }
+
+        // Odczyt glosnosci -------------------------------
+        float volume = 0.0f;
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+
+            // RMS (Root Mean Square) - pierwiastek z wartosci sredniej kwadratu, czyli srednia amplituda sygnalu
+            float sumSquares = 0.0f;
+            for (float s : g_samples)
+                sumSquares += s * s;
+
+            volume = std::sqrt(sumSquares / g_samples.size());
+        
+        }
+        std::ostringstream stringVolume;
+        stringVolume << "Volume: " << std::fixed << std::setprecision(3) << "volume: " << volume ;
+        volText.setString(stringVolume.str());
+
+        // Odczyt czestotliwosci ---------------------------
 
         // okna Hanninga - wygladzenie poczatku i konca probki zeby mialy wartosc 0 zeby wyeliminowac falszywe czestotliwosci
         for (int i = 0; i < BUFFER_SIZE; i++)
@@ -144,14 +169,15 @@ int main() {
         }
 
         // ------ Wyswietlenie czestotliwosci ------
-        std::ostringstream ss
-        ss << std::fixed << std::setprecision(1) << dominantFreq << " Hz";  //format zmienno przecinkowy z 1 liczba po przecinku
-        freqText.setString(ss.str());
+        std::ostringstream stringFrequency;
+        stringFrequency << std::fixed << std::setprecision(1) << dominantFreq << " Hz";  //format zmienno przecinkowy z 1 liczba po przecinku
+        freqText.setString(stringFrequency.str());
 
         window.clear(sf::Color::Black);
         window.draw(waveform);
         window.draw(spectrum);
         window.draw(freqText);
+        window.draw(volText);
         window.display();
     }
 
