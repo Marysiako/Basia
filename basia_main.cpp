@@ -112,11 +112,13 @@ void MetronomeThread() {
 //DO TUNER I TAB CREATOR -------------------------------------------------------------------
 //DRUGI WATEK ODCZYTUJACY CZESTOTLIWOSC
 std::atomic<float> currentFreq{0.0f};
+std::atomic<float> currentVolume{0.0f};
 std::atomic<bool> running{true};
 
 void tunerThread() {
     while(running) {
         currentFreq = GetFrequencyFromMicrophone();
+        currentVolume = GetVolumeFromMicrophone();
         std::this_thread::sleep_for(std::chrono::milliseconds(50)); // np. co 50ms
     }
 }
@@ -162,15 +164,14 @@ struct TabFrame {
     std::string G = "G|-";
 };
 TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
-// FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci
-std::vector<Note>  findMatchingNote(float freq) {
+// FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci zwraca vektor wszytskich pasujacych dzwiekow
+std::vector<Note>  findMatchingNotes(float freq) {
     std::vector<Note> matchingNotes;
-    float minDiff = 1.0;
+    float minDiff = 0.7;
 
     for (const auto& note : notes) {
         float diff = std::abs(note.frequency - freq);
         if (diff < minDiff) {
-            minDiff = diff;
             matchingNotes.push_back(note);
         }
     }
@@ -183,10 +184,10 @@ void saveTabToFile(const TabFrame& tab, const std::string& filename) {
         return;
     }
 
-    outFile << tab.E << "\n";
-    outFile << tab.A << "\n";
-    outFile << tab.D << "\n";
     outFile << tab.G << "\n";
+    outFile << tab.D << "\n";
+    outFile << tab.A << "\n";
+    outFile << tab.E << "\n";
 
     outFile.close(); 
 }
@@ -260,14 +261,14 @@ int main()
     BUTTON tabCreatorSaveButton("save", 700, 50, "small");
     BUTTON tabCreatorResetButton("reset", 800, 50, "small");
     bool tabCreatorRunning = false;
-    sf::Text tabCreatorEText("E", font, 15);
-    tabCreatorEText.setPosition(10, 100);
-    sf::Text tabCreatorAText("A", font, 15);
+    sf::Text tabCreatorEText("E", font, 10);
+    tabCreatorEText.setPosition(10, 175);
+    sf::Text tabCreatorAText("A", font, 10);
     tabCreatorAText.setPosition(10, 150);
-    sf::Text tabCreatorDText("D", font, 15);
-    tabCreatorDText.setPosition(10, 200);
-    sf::Text tabCreatorGText("G", font, 15);
-    tabCreatorGText.setPosition(10, 250);
+    sf::Text tabCreatorDText("D", font, 10);
+    tabCreatorDText.setPosition(10, 125);
+    sf::Text tabCreatorGText("G", font, 10);
+    tabCreatorGText.setPosition(10, 100);
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -309,9 +310,9 @@ int main()
     slider.setPosition(345, 400);
     slider.setFillColor(sf::Color::Black);
 
-    sf::CircleShape slider_circle(10);      // Kółko suwaka
+    sf::CircleShape slider_circle(10);      // Kolko suwaka
     slider_circle.setFillColor(sf::Color::White);
-    slider_circle.setPosition(495, 395); // Pozycja początkową kółka
+    slider_circle.setPosition(495, 395); // Pozycja poczatkowa kolka
 
 
     // czcionki i pozycje
@@ -636,10 +637,10 @@ int main()
                         {
                             //zapisuje aktualny stan myTabs i zapisuje do pliku txt
                             tabCreatorRunning = false;
-                            myTabs.E = "E|";
-                            myTabs.A = "A|";
-                            myTabs.D = "D|";
-                            myTabs.G = "G|";
+                            myTabs.E = "E|-";
+                            myTabs.A = "A|-";
+                            myTabs.D = "D|-";
+                            myTabs.G = "G|-";
                             tabCreatorEText.setString(myTabs.E);
                             tabCreatorAText.setString(myTabs.A);
                             tabCreatorDText.setString(myTabs.D);
@@ -1075,18 +1076,62 @@ int main()
         // TAB CREATOR
         if (screen_number == 2)
         {
+            static float lastVolume = 0.0f; T 
+            //TEN ALGORYTM JEST DO OPRACOWANIA BO NARAZIE DZIALA Z GRUBSZA ALE CZASEM NIE WYLAPUJE DZWIEKOW I NIE WYLAPUJE KIEDY DZWIEK JESZCZE WYBRZMIEWA A KIEDY JEST NOWE UDERZENIE
             if (tabCreatorRunning){
                 float freq = currentFreq;
-                myTabs.E += "-";
-                myTabs.A += "-";
-                myTabs.D += "-";
-                myTabs.G += "-";
+                float vol = currentVolume;
+                std::vector<Note> currentNotes;
+
+                // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
+                float volumeDiff = vol - lastVolume;
+                float volumePercent = volumeDiff/lastVolume;
+                bool hitDetected = (volumePercent > 0.20*lastVolume && vol > 0.01f);
+
+                lastVolume = vol; 
+
+                if (hitDetected){
+                    currentNotes = findMatchingNotes(freq);
+                }
+                std::string Estr = "---";
+                std::string Astr = "---";
+                std::string Dstr = "---";
+                std::string Gstr = "---";
+
+                for (Note n: currentNotes){
+                      std::string Str = "-" + std::to_string(n.fret);
+                    if (n.fret < 10) {   // jesli liczba jednocyfrowa, dopisz "-"
+                        Str += "-";
+                    }
+                    if (n.stringName == 'E'){ Estr = Str;}
+                    if (n.stringName == 'A'){ Astr = Str;}
+                    if (n.stringName == 'D'){ Dstr = Str;}
+                    if (n.stringName == 'G'){ Gstr = Str;}
+
+                }
+                
+                myTabs.E += Estr;
+                myTabs.A += Astr;
+                myTabs.D += Dstr;
+                myTabs.G += Gstr;
+                std::cout <<myTabs.E.size();
+                if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.G.size() % 138 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\n";}
                 tabCreatorEText.setString(myTabs.E);
                 tabCreatorAText.setString(myTabs.A);
                 tabCreatorDText.setString(myTabs.D);
                 tabCreatorGText.setString(myTabs.G);
-                std::this_thread::sleep_for(std::chrono::milliseconds(500)); //zeby nie lecialo za szybko i sie nie wieszalo
+                std::cout << "freq: " <<currentFreq << std::endl;
+                std::cout << "vol: " << currentVolume << std::endl;
+                for (Note n: currentNotes){
+                std::cout << n.stringName << n.fret <<std::endl;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(200)); //zeby nie lecialo za szybko i sie nie wieszalo
+                
             }
+            
             
             //drawing
             window.clear();
@@ -1095,10 +1140,10 @@ int main()
             tabCreatorStopButton.draw(window);
             tabCreatorSaveButton.draw(window);
             tabCreatorResetButton.draw(window);
-            window.draw(tabCreatorEText);
-            window.draw(tabCreatorAText);
-            window.draw(tabCreatorDText);
             window.draw(tabCreatorGText);
+            window.draw(tabCreatorDText);
+            window.draw(tabCreatorAText);
+            window.draw(tabCreatorEText);
             back_button.draw(window);
             window.display();
         }

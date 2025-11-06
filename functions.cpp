@@ -118,11 +118,33 @@ float GetFrequencyFromMicrophone() {
         fftwf_free(fft_out);
         return dominantFreq;
 }
-    
+float GetVolumeFromMicrophone(){
+    std::vector<float> fft_in(BUFFER_SIZE);
 
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        fft_in = g_samples;
+    }
+    // Odczyt glosnosci -------------------------------
+        float volume = 0.0f;
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+
+            // RMS (Root Mean Square) - pierwiastek z wartosci sredniej kwadratu, czyli srednia amplituda sygnalu
+            float sumSquares = 0.0f;
+            for (float s : g_samples)
+                sumSquares += s * s;
+
+            volume = std::sqrt(sumSquares / g_samples.size());
+        
+        }
+       return volume; 
+}
+    
 int GiveRandomIndex(int i)
 {
     //Funkcja losuje numer z zakresu 0-i
     size_t randomIndex = std::rand() % i;
     return randomIndex;
 }
+

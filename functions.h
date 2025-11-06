@@ -9,5 +9,6 @@
 bool InitAudio();
 void CloseAudio();
 float GetFrequencyFromMicrophone();
+float GetVolumeFromMicrophone();
 int GiveRandomIndex(int i);
 #endif
