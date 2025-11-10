@@ -167,7 +167,7 @@ TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
 // FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci zwraca vektor wszytskich pasujacych dzwiekow
 std::vector<Note>  findMatchingNotes(float freq) {
     std::vector<Note> matchingNotes;
-    float minDiff = 0.4;
+    float minDiff = 0.3;
 
     for (const auto& note : notes) {
         float diff = std::abs(note.frequency - freq);
