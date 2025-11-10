@@ -1076,7 +1076,8 @@ int main()
         // TAB CREATOR
         if (screen_number == 2)
         {
-            static float lastVolume = 0.0f; T 
+            static float lastVolume = 0.0f; 
+            float volumePercent =0.0f;
             //TEN ALGORYTM JEST DO OPRACOWANIA BO NARAZIE DZIALA Z GRUBSZA ALE CZASEM NIE WYLAPUJE DZWIEKOW I NIE WYLAPUJE KIEDY DZWIEK JESZCZE WYBRZMIEWA A KIEDY JEST NOWE UDERZENIE
             if (tabCreatorRunning){
                 float freq = currentFreq;
@@ -1085,8 +1086,10 @@ int main()
 
                 // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
                 float volumeDiff = vol - lastVolume;
-                float volumePercent = volumeDiff/lastVolume;
-                bool hitDetected = (volumePercent > 0.20*lastVolume && vol > 0.01f);
+                if (lastVolume>0){
+                    volumePercent = volumeDiff/lastVolume;
+                }
+                bool hitDetected = (volumePercent > 0.10*lastVolume && vol > 0.04f);
 
                 lastVolume = vol; 
 
@@ -1115,10 +1118,12 @@ int main()
                 myTabs.D += Dstr;
                 myTabs.G += Gstr;
                 std::cout <<myTabs.E.size();
+                // Kolejna linia
                 if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.G.size() % 138 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.E.size() >=552 ){tabCreatorRunning = false;}
                 tabCreatorEText.setString(myTabs.E);
                 tabCreatorAText.setString(myTabs.A);
                 tabCreatorDText.setString(myTabs.D);
@@ -1128,7 +1133,7 @@ int main()
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(200)); //zeby nie lecialo za szybko i sie nie wieszalo
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
                 
             }
             
