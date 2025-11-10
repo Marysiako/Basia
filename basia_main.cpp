@@ -167,7 +167,7 @@ TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
 // FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci zwraca vektor wszytskich pasujacych dzwiekow
 std::vector<Note>  findMatchingNotes(float freq) {
     std::vector<Note> matchingNotes;
-    float minDiff = 0.7;
+    float minDiff = 0.4;
 
     for (const auto& note : notes) {
         float diff = std::abs(note.frequency - freq);
@@ -608,6 +608,14 @@ int main()
                         if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             //myTabs zeruje i zaczyna leciec petla zapisujaca dzwieki
+                            myTabs.E = "E|-";
+                            myTabs.A = "A|-";
+                            myTabs.D = "D|-";
+                            myTabs.G = "G|-";
+                            tabCreatorEText.setString(myTabs.E);
+                            tabCreatorAText.setString(myTabs.A);
+                            tabCreatorDText.setString(myTabs.D);
+                            tabCreatorGText.setString(myTabs.G); 
                             tabCreatorRunning = true;
                         }
                     }
@@ -1031,7 +1039,7 @@ int main()
             if (freq >= 35 && freq < 48)   //E
             {
                 line_y = 405;
-                float k = 41-freq;
+                float k = 41.2-freq;
                 line_x = W/2 - k*10;
             }
             else if (freq >= 48 && freq < 62)  //A
@@ -1044,7 +1052,7 @@ int main()
             else if (freq >= 62 && freq < 80)   //D
             {
                 line_y = 278;
-                float k = 74-freq;
+                float k = 73.42-freq;
                 line_x = W/2 - k*10;
 
             }
@@ -1078,6 +1086,7 @@ int main()
         {
             static float lastVolume = 0.0f; 
             float volumePercent =0.0f;
+            float maxVolume = 0.1f;
             //TEN ALGORYTM JEST DO OPRACOWANIA BO NARAZIE DZIALA Z GRUBSZA ALE CZASEM NIE WYLAPUJE DZWIEKOW I NIE WYLAPUJE KIEDY DZWIEK JESZCZE WYBRZMIEWA A KIEDY JEST NOWE UDERZENIE
             if (tabCreatorRunning){
                 float freq = currentFreq;
@@ -1086,10 +1095,13 @@ int main()
 
                 // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
                 float volumeDiff = vol - lastVolume;
-                if (lastVolume>0){
+                if (lastVolume>0.0f){
                     volumePercent = volumeDiff/lastVolume;
                 }
-                bool hitDetected = (volumePercent > 0.10*lastVolume && vol > 0.04f);
+                if (vol > maxVolume){
+                    maxVolume = vol;
+                }
+                bool hitDetected = (volumePercent > 0.10f*lastVolume && vol > (0.01f*maxVolume));
 
                 lastVolume = vol; 
 
