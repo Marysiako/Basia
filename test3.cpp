@@ -149,8 +149,28 @@ int main() {
                 std::max_element(fft_mag.begin(), fft_mag.begin() + BUFFER_SIZE / 2)
             );
         }
-
         float dominantFreq = firstPeakIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
+//------------------------------- Interpolacja zeby miec dokladniejsza czestotliwosc ale nie zwiekszac juz rozmairu buferu bo jest gigantyczny
+
+        int i = firstPeakIndex;
+        
+        // SPrawdzenie czy nie jest na brzegu tablicy
+        if (i > 0 && i < (BUFFER_SIZE / 2 - 1)) {
+            float left = fft_mag[i - 1];
+            float center = fft_mag[i];
+            float right = fft_mag[i + 1];
+
+            // Wzor na przesuniecie (moze byc ujemne)
+            float delta = 0.5f * (left - right) / (left - 2.0f * center + right);
+
+            //Dokladniejsza czestotliwosc
+            float interpolatedIndex = i + delta;
+            dominantFreq = interpolatedIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
+
+        }
+
+//-----------------------------------
+        //float dominantFreq = firstPeakIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
         
         // ------ Fala dzwiekowa ------
         for (size_t i = 0; i < g_samples.size(); i++) {
