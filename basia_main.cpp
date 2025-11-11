@@ -1,7 +1,5 @@
 //#include "AUDIO.h"
 /*
-g++ basia_main.cpp BUTTON.cpp BUTTON.h functions.cpp functions.h SOUND.cpp SOUND.h 
--o sfml-app -lportaudio -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -L/Basia/portaudio
 
 TAK DZIALA:
  g++ basia_main2.cpp BUTTON.cpp functions.cpp SOUND.cpp TEXTURE.cpp FRET.cpp \
@@ -167,7 +165,7 @@ TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
 // FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci zwraca vektor wszytskich pasujacych dzwiekow
 std::vector<Note>  findMatchingNotes(float freq) {
     std::vector<Note> matchingNotes;
-    float minDiff = 0.3;
+    float minDiff = 0.4;
 
     for (const auto& note : notes) {
         float diff = std::abs(note.frequency - freq);
@@ -1086,27 +1084,33 @@ int main()
         {
             static float lastVolume = 0.0f; 
             float volumePercent =0.0f;
-            float maxVolume = 0.1f;
-            //TEN ALGORYTM JEST DO OPRACOWANIA BO NARAZIE DZIALA Z GRUBSZA ALE CZASEM NIE WYLAPUJE DZWIEKOW I NIE WYLAPUJE KIEDY DZWIEK JESZCZE WYBRZMIEWA A KIEDY JEST NOWE UDERZENIE
+            float maxVolume = 0.8f;
+            static auto lastHitTime = std::chrono::steady_clock::now();         
+
+            //TEN ALGORYTM JEST DO DOPRACOWANIA 
             if (tabCreatorRunning){
                 float freq = currentFreq;
                 float vol = currentVolume;
                 std::vector<Note> currentNotes;
+                auto now = std::chrono::steady_clock::now();
+                float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
 
                 // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
                 float volumeDiff = vol - lastVolume;
+
                 if (lastVolume>0.0f){
                     volumePercent = volumeDiff/lastVolume;
                 }
                 if (vol > maxVolume){
                     maxVolume = vol;
                 }
-                bool hitDetected = (volumePercent > 0.10f*lastVolume && vol > (0.01f*maxVolume));
 
+                bool hitDetected = (volumePercent > 0.10f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.0f);
                 lastVolume = vol; 
 
                 if (hitDetected){
                     currentNotes = findMatchingNotes(freq);
+                    lastHitTime = now;
                 }
                 std::string Estr = "---";
                 std::string Astr = "---";
