@@ -1084,7 +1084,7 @@ int main()
         {
             static float lastVolume = 0.0f; 
             float volumePercent =0.0f;
-            float maxVolume = 0.8f;
+            float maxVolume = 0.05f;
             static auto lastHitTime = std::chrono::steady_clock::now();         
 
             //TEN ALGORYTM JEST DO DOPRACOWANIA 
@@ -1093,7 +1093,7 @@ int main()
                 float vol = currentVolume;
                 std::vector<Note> currentNotes;
                 auto now = std::chrono::steady_clock::now();
-                float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+                //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
 
                 // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
                 float volumeDiff = vol - lastVolume;
@@ -1105,7 +1105,8 @@ int main()
                     maxVolume = vol;
                 }
 
-                bool hitDetected = (volumePercent > 0.10f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.0f);
+               // bool hitDetected = (volumePercent > 0.50f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.0f);
+               bool hitDetected = (vol > 1.6f*lastVolume     &&     vol > (0.20f*maxVolume)  );
                 lastVolume = vol; 
 
                 if (hitDetected){
@@ -1133,7 +1134,7 @@ int main()
                 myTabs.A += Astr;
                 myTabs.D += Dstr;
                 myTabs.G += Gstr;
-                std::cout <<myTabs.E.size();
+                //std::cout <<myTabs.E.size();
                 // Kolejna linia
                 if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
@@ -1144,12 +1145,12 @@ int main()
                 tabCreatorAText.setString(myTabs.A);
                 tabCreatorDText.setString(myTabs.D);
                 tabCreatorGText.setString(myTabs.G);
-                std::cout << "freq: " <<currentFreq << std::endl;
+                //std::cout << "freq: " <<currentFreq << std::endl;
                 std::cout << "vol: " << currentVolume << std::endl;
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
+                std::this_thread::sleep_for(std::chrono::milliseconds(50)); //zeby nie lecialo za szybko i sie nie wieszalo
                 
             }
             

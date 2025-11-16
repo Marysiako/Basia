@@ -114,28 +114,49 @@ float GetFrequencyFromMicrophone() {
         }
 
         float dominantFreq = firstPeakIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
+        
+        //INTERPOLACJA dla dokladniejszej czestotliwosci
+        int i = firstPeakIndex;
+        // SPrawdzenie czy nie jest na brzegu tablicy
+        if (i > 0 && i < (BUFFER_SIZE / 2 - 1)) {
+            float left = fft_mag[i - 1];
+            float center = fft_mag[i];
+            float right = fft_mag[i + 1];
+
+            // Wzor na przesuniecie (moze byc ujemne)
+            float delta = 0.5f * (left - right) / (left - 2.0f * center + right);
+
+            //Dokladniejsza czestotliwosc
+            float interpolatedIndex = i + delta;
+            dominantFreq = interpolatedIndex * (float)SAMPLE_RATE / BUFFER_SIZE;
+
+        }
+
+        
         fftwf_destroy_plan(plan);
         fftwf_free(fft_out);
         return dominantFreq;
 }
 float GetVolumeFromMicrophone(){
-    std::vector<float> fft_in(BUFFER_SIZE);
+    int volumeBufferSize = 2*256; //
+    std::vector<float> fft_in(volumeBufferSize);
 
     {
         std::lock_guard<std::mutex> lock(g_mutex);
-        fft_in = g_samples;
+        //fft_in = g_samples;
+        fft_in =  std::vector<float>(g_samples.end() - volumeBufferSize, g_samples.end());
     }
     // Odczyt glosnosci -------------------------------
         float volume = 0.0f;
         {
-            std::lock_guard<std::mutex> lock(g_mutex);
+            //std::lock_guard<std::mutex> lock(g_mutex);
 
             // RMS (Root Mean Square) - pierwiastek z wartosci sredniej kwadratu, czyli srednia amplituda sygnalu
             float sumSquares = 0.0f;
-            for (float s : g_samples)
+            for (float s : fft_in)
                 sumSquares += s * s;
 
-            volume = std::sqrt(sumSquares / g_samples.size());
+            volume = std::sqrt(sumSquares / fft_in.size());
         
         }
        return volume; 
