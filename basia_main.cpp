@@ -120,6 +120,7 @@ void tunerThread() {
         std::this_thread::sleep_for(std::chrono::milliseconds(50)); // np. co 50ms
     }
 }
+
 sf::SoundBuffer E_buffer, A_buffer, D_buffer, G_buffer;
 sf::Sound E_sound, A_sound, D_sound, G_sound;
 
@@ -267,6 +268,7 @@ int main()
     tabCreatorDText.setPosition(10, 125);
     sf::Text tabCreatorGText("G", font, 10);
     tabCreatorGText.setPosition(10, 100);
+    static std::vector<float> volumeHistory; 
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -651,6 +653,7 @@ int main()
                             tabCreatorAText.setString(myTabs.A);
                             tabCreatorDText.setString(myTabs.D);
                             tabCreatorGText.setString(myTabs.G);    
+                            volumeHistory.clear();
                         }
                     }
                 }
@@ -1084,13 +1087,16 @@ int main()
         {
             static float lastVolume = 0.0f; 
             float volumePercent =0.0f;
-            float maxVolume = 0.05f;
+            float maxVolume = 0.008f;
             static auto lastHitTime = std::chrono::steady_clock::now();         
+            
+            const int maxVolumePoints = 500;
 
             //TEN ALGORYTM JEST DO DOPRACOWANIA 
             if (tabCreatorRunning){
                 float freq = currentFreq;
                 float vol = currentVolume;
+                volumeHistory.push_back(vol);
                 std::vector<Note> currentNotes;
                 auto now = std::chrono::steady_clock::now();
                 //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
@@ -1162,6 +1168,18 @@ int main()
             tabCreatorStopButton.draw(window);
             tabCreatorSaveButton.draw(window);
             tabCreatorResetButton.draw(window);
+
+            if (!volumeHistory.empty()) {
+                sf::VertexArray lines(sf::LineStrip, volumeHistory.size());
+                for (size_t i = 0; i < volumeHistory.size(); i++) {
+                    float x = (float)i * (window.getSize().x / (float)maxVolumePoints);
+                    float y = window.getSize().y - volumeHistory[i] * 5000; // skalowanie do okna
+                    if (y < 0) y = 0;
+                    if (y > window.getSize().y) y = window.getSize().y;
+                    lines[i] = sf::Vertex(sf::Vector2f(x, y), sf::Color::Green);
+                }
+                window.draw(lines);
+            }
             window.draw(tabCreatorGText);
             window.draw(tabCreatorDText);
             window.draw(tabCreatorAText);
