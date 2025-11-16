@@ -117,7 +117,7 @@ void tunerThread() {
     while(running) {
         currentFreq = GetFrequencyFromMicrophone();
         currentVolume = GetVolumeFromMicrophone();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50)); // np. co 50ms
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // np. co 50ms
     }
 }
 
@@ -1156,7 +1156,7 @@ int main()
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(50)); //zeby nie lecialo za szybko i sie nie wieszalo
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
                 
             }
             
