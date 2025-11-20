@@ -1182,7 +1182,7 @@ int main()
                     maxVolume = vol;
                 }
 
-               bool hitDetected = (volumePercent > 50.0f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
+               bool hitDetected = (volumePercent > 20.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
                //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
                 lastVolume = vol; 
 
