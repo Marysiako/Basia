@@ -111,12 +111,14 @@ void MetronomeThread() {
 //DRUGI WATEK ODCZYTUJACY CZESTOTLIWOSC
 std::atomic<float> currentFreq{0.0f};
 std::atomic<float> currentVolume{0.0f};
+std::atomic<float> currentSF{0.0f};
 std::atomic<bool> running{true};
 
 void tunerThread() {
     while(running) {
         currentFreq = GetFrequencyFromMicrophone();
         currentVolume = GetVolumeFromMicrophone();
+        currentSF = GetSFFrameFromMicrophone();
         std::this_thread::sleep_for(std::chrono::milliseconds(10)); // np. co 50ms
     }
 }
@@ -1092,7 +1094,8 @@ int main()
             
             const int maxVolumePoints = 500;
 
-            //TEN ALGORYTM JEST DO DOPRACOWANIA 
+            //ZLE dzialajacy algorytm porownujacy glosnosci miedzy petlami
+            /*
             if (tabCreatorRunning){
                 float freq = currentFreq;
                 float vol = currentVolume;
@@ -1159,7 +1162,74 @@ int main()
                 std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
                 
             }
-            
+            */
+            //ALgorytm porownujacy okna - spectral flux
+            if (tabCreatorRunning){
+                float freq = currentFreq;
+                float vol = currentSF;
+                volumeHistory.push_back(vol);
+                std::vector<Note> currentNotes;
+                auto now = std::chrono::steady_clock::now();
+                float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+
+                // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
+                float volumeDiff = vol - lastVolume;
+
+                if (lastVolume>0.0f){
+                    volumePercent = volumeDiff/lastVolume;
+                }
+                if (vol > maxVolume){
+                    maxVolume = vol;
+                }
+
+               bool hitDetected = (volumePercent > 50.0f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
+               //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
+                lastVolume = vol; 
+
+                if (hitDetected){
+                    currentNotes = findMatchingNotes(freq);
+                    lastHitTime = now;
+                }
+                std::string Estr = "---";
+                std::string Astr = "---";
+                std::string Dstr = "---";
+                std::string Gstr = "---";
+
+                for (Note n: currentNotes){
+                      std::string Str = "-" + std::to_string(n.fret);
+                    if (n.fret < 10) {   // jesli liczba jednocyfrowa, dopisz "-"
+                        Str += "-";
+                    }
+                    if (n.stringName == 'E'){ Estr = Str;}
+                    if (n.stringName == 'A'){ Astr = Str;}
+                    if (n.stringName == 'D'){ Dstr = Str;}
+                    if (n.stringName == 'G'){ Gstr = Str;}
+
+                }
+                
+                myTabs.E += Estr;
+                myTabs.A += Astr;
+                myTabs.D += Dstr;
+                myTabs.G += Gstr;
+                //std::cout <<myTabs.E.size();
+                // Kolejna linia
+                if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.G.size() % 138 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.E.size() >=552 ){tabCreatorRunning = false;}
+                tabCreatorEText.setString(myTabs.E);
+                tabCreatorAText.setString(myTabs.A);
+                tabCreatorDText.setString(myTabs.D);
+                tabCreatorGText.setString(myTabs.G);
+                //std::cout << "freq: " <<currentFreq << std::endl;
+                std::cout << "vol: " << currentVolume << std::endl;
+                for (Note n: currentNotes){
+                std::cout << n.stringName << n.fret <<std::endl;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
+                
+            }
             
             //drawing
             window.clear();
@@ -1173,7 +1243,7 @@ int main()
                 sf::VertexArray lines(sf::LineStrip, volumeHistory.size());
                 for (size_t i = 0; i < volumeHistory.size(); i++) {
                     float x = (float)i * (window.getSize().x / (float)maxVolumePoints);
-                    float y = window.getSize().y - volumeHistory[i] * 5000; // skalowanie do okna
+                    float y = window.getSize().y - volumeHistory[i] * 50; // skalowanie do okna
                     if (y < 0) y = 0;
                     if (y > window.getSize().y) y = window.getSize().y;
                     lines[i] = sf::Vertex(sf::Vector2f(x, y), sf::Color::Green);

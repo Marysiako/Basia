@@ -10,5 +10,6 @@ bool InitAudio();
 void CloseAudio();
 float GetFrequencyFromMicrophone();
 float GetVolumeFromMicrophone();
+float GetSFFrameFromMicrophone();
 int GiveRandomIndex(int i);
 #endif

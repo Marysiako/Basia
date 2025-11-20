@@ -13,7 +13,7 @@
 
 
 //DO ODCZYTU CZESTOTLIWOSCI
-#define SAMPLE_RATE 44100   // czestotliwosc probkowania
+#define SAMPLE_RATE 44100   // czestotliwosc probkowania  powinna byc przynajmniej 600Hz 
 #define FRAMES_PER_BUFFER 256 // liczba probek na jeden callback
 #define BUFFER_SIZE 32768   // rozmiar bufora - nim wiekszy tym dokladniej
 
@@ -161,6 +161,54 @@ float GetVolumeFromMicrophone(){
         }
        return volume; 
 }
+float GetSFFrameFromMicrophone()
+{
+    const int frameBufferSize = 1024;  // (2*256) 
+    float cutoffHz = 500.0f;       // czestotliwosc odciecia zeby byly tylko wysokie usuwamy niskie zeby bralo atak a nie
+    int startBin = (int)(cutoffHz * frameBufferSize / SAMPLE_RATE);
+    
+    std::vector<float> fft_in(frameBufferSize);
+
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        fft_in = std::vector<float>(g_samples.end() - frameBufferSize, g_samples.end());
+    }
+
+    // --- FFTW ---
+    fftwf_complex* fft_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (frameBufferSize/2 + 1));
+    fftwf_plan plan = fftwf_plan_dft_r2c_1d(frameBufferSize, fft_in.data(), fft_out, FFTW_ESTIMATE);
+
+    // --- okno ---
+    for (int i = 0; i < frameBufferSize; i++)
+        fft_in[i] *= 0.5f * (1 - cos(2 * M_PI * i / (frameBufferSize - 1)));
+
+    fftwf_execute(plan);
+
+    std::vector<float> mag(frameBufferSize/2 + 1);
+
+    for (int k = 0; k <= frameBufferSize/2; k++)
+        mag[k] = std::sqrt(fft_out[k][0]*fft_out[k][0] + fft_out[k][1]*fft_out[k][1]);
+
+    // --- poprzednia ramka (musi być statyczna!) ---
+    static std::vector<float> prevMag(frameBufferSize/2 + 1, 0.0f);
+
+    float sf = 0.0f;
+    for (int k = startBin; k <= frameBufferSize/2; k++) {
+        float diff = mag[k] - prevMag[k];
+        if (diff > 0) sf += diff;
+    }
+
+    prevMag = mag;  // zapamiętaj do kolejnej funkcji
+
+    fftwf_destroy_plan(plan);
+    fftwf_free(fft_out);
+    static float sfSmooth = 0.0f;
+    sfSmooth = 0.7f * sfSmooth + 0.3f * sf; // low-pass
+    return sfSmooth;
+
+    //return sf;
+}
+
     
 int GiveRandomIndex(int i)
 {
