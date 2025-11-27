@@ -114,15 +114,6 @@ std::atomic<float> currentVolume{0.0f};
 std::atomic<float> currentSF{0.0f};
 std::atomic<bool> running{true};
 
-void tunerThread() {
-    while(running) {
-        currentFreq = GetFrequencyFromMicrophone();
-        currentVolume = GetVolumeFromMicrophone();
-        currentSF = GetSFFrameFromMicrophone();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // np. co 50ms
-    }
-}
-
 sf::SoundBuffer E_buffer, A_buffer, D_buffer, G_buffer;
 sf::Sound E_sound, A_sound, D_sound, G_sound;
 
@@ -168,7 +159,7 @@ TabFrame myTabs; //Struktura przechowujaca stringi dla wszystkich strun
 // FUnkcja znajdujaca pasujace progi na gryfie do zagranej czestotliwosci zwraca vektor wszytskich pasujacych dzwiekow
 std::vector<Note>  findMatchingNotes(float freq) {
     std::vector<Note> matchingNotes;
-    float minDiff = 0.4;
+    float minDiff = 1.0f; //minimalnie jest okolo 2.4Hz roznicy miedzy dziwkami wiec troche mniej niz polowe daje jakby nie stroil idealnie
 
     for (const auto& note : notes) {
         float diff = std::abs(note.frequency - freq);
@@ -229,7 +220,7 @@ int main()
     BUTTON tuner_button("tuner",160, 150, "big");
     BUTTON tabcreator_button("tab creator", 520, 150, "big");
     BUTTON metronome_button("metronome", 160, 300, "big");
-    BUTTON effects_button("effects", 520, 300, "big");
+    BUTTON effects_button("book", 520, 300, "big"); //Zmieniam efekty na ksiazeczke z teoria
     BUTTON games_buton("games", 160, 450, "big");
     BUTTON exit_button("exit", 520, 450, "big");
     BUTTON back_button("BACK", 930, 550, "small");
@@ -270,7 +261,8 @@ int main()
     tabCreatorDText.setPosition(10, 125);
     sf::Text tabCreatorGText("G", font, 10);
     tabCreatorGText.setPosition(10, 100);
-    static std::vector<float> volumeHistory; 
+    static std::vector<float> volumeHistory;  //historia Spectral FLux energi
+    static std::vector<float>  history; // historia SF do liczenia progu adaptacyjnego
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -294,8 +286,6 @@ int main()
     play_A.setPosition(780, 345);
     play_E.setPosition(780, 410);
 
-
-    std::thread tuner(tunerThread); //odpalenie watku odczytu czestotliwosci
     //W TUNER
     sf::Text freqText("", font, 20);
     freqText.setFillColor(sf::Color::Red);
@@ -495,7 +485,6 @@ int main()
             {
                 window.close();
                 running = false;  // sygnal do watku
-                tuner.join();     // czekam, az watek siezakonczy
                 CloseAudio();
                 break;
             }
@@ -1032,7 +1021,7 @@ int main()
         if (screen_number == 1)
         {
             //float freq = GetFrequencyFromMicrophone();
-            float freq = currentFreq;
+            float freq = GetFrequencyFromMicrophone();
             freqText.setString("Czestotliwosc: " + std::to_string(freq));
             //std::cout << "czestotliwosc: " << freq << "\n";
             //Pobieranie czestotliwosci z mikrofonu i dopasowanie jej do dzwieku, zmiana pozycji lini zaleznie od czestotliwosci
@@ -1084,112 +1073,82 @@ int main()
             window.draw(freqEADGText);
             window.display();
         }
-        // TAB CREATOR
+        //TAB CREATOR
         if (screen_number == 2)
         {
+
             static float lastVolume = 0.0f; 
+
             float volumePercent =0.0f;
-            float maxVolume = 0.008f;
-            static auto lastHitTime = std::chrono::steady_clock::now();         
+            float maxVolume = 0.006f;
+            static auto lastHitTime = std::chrono::steady_clock::now();  
+            //static auto widnowStartTime = std::chrono::steady_clock::now();   
+            bool hitDetected = false;     
             
             const int maxVolumePoints = 500;
 
-            //ZLE dzialajacy algorytm porownujacy glosnosci miedzy petlami
-            /*
-            if (tabCreatorRunning){
-                float freq = currentFreq;
-                float vol = currentVolume;
-                volumeHistory.push_back(vol);
-                std::vector<Note> currentNotes;
-                auto now = std::chrono::steady_clock::now();
-                //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
-
-                // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
-                float volumeDiff = vol - lastVolume;
-
-                if (lastVolume>0.0f){
-                    volumePercent = volumeDiff/lastVolume;
-                }
-                if (vol > maxVolume){
-                    maxVolume = vol;
-                }
-
-               // bool hitDetected = (volumePercent > 0.50f*lastVolume     &&     vol > (0.05f*maxVolume)     &&       secondsSinceLastHit > 0.0f);
-               bool hitDetected = (vol > 1.6f*lastVolume     &&     vol > (0.20f*maxVolume)  );
-                lastVolume = vol; 
-
-                if (hitDetected){
-                    currentNotes = findMatchingNotes(freq);
-                    lastHitTime = now;
-                }
-                std::string Estr = "---";
-                std::string Astr = "---";
-                std::string Dstr = "---";
-                std::string Gstr = "---";
-
-                for (Note n: currentNotes){
-                      std::string Str = "-" + std::to_string(n.fret);
-                    if (n.fret < 10) {   // jesli liczba jednocyfrowa, dopisz "-"
-                        Str += "-";
-                    }
-                    if (n.stringName == 'E'){ Estr = Str;}
-                    if (n.stringName == 'A'){ Astr = Str;}
-                    if (n.stringName == 'D'){ Dstr = Str;}
-                    if (n.stringName == 'G'){ Gstr = Str;}
-
-                }
-                
-                myTabs.E += Estr;
-                myTabs.A += Astr;
-                myTabs.D += Dstr;
-                myTabs.G += Gstr;
-                //std::cout <<myTabs.E.size();
-                // Kolejna linia
-                if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.G.size() % 138 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.E.size() >=552 ){tabCreatorRunning = false;}
-                tabCreatorEText.setString(myTabs.E);
-                tabCreatorAText.setString(myTabs.A);
-                tabCreatorDText.setString(myTabs.D);
-                tabCreatorGText.setString(myTabs.G);
-                //std::cout << "freq: " <<currentFreq << std::endl;
-                std::cout << "vol: " << currentVolume << std::endl;
-                for (Note n: currentNotes){
-                std::cout << n.stringName << n.fret <<std::endl;
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
-                
-            }
-            */
             //ALgorytm porownujacy okna - spectral flux
             if (tabCreatorRunning){
-                float freq = currentFreq;
-                float vol = currentSF;
+                float freq = GetFrequencyFromMicrophone();
+                float vol = GetSFFrameFromMicrophone();
                 volumeHistory.push_back(vol);
                 std::vector<Note> currentNotes;
+                //auto now = std::chrono::steady_clock::now();
+                //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+
+                const int N = 20;
+
+                //--------- PROG ADAPTACYJNY ------------------
+                history.push_back(vol);
+                if (history.size() > N) history.erase(history.begin());
+
+                // obliczenie sredniej
+                float mean = 0;
+                for (float v : history) mean += v;
+                mean /= history.size();
+
+                // obliczenie odchylenie
+                float var = 0;
+                for (float v : history) var += (v - mean) * (v - mean);
+                var /= history.size();
+
+                float stddev = sqrt(var);
+
+                // prog
+                float threshold = mean + 0.8f * stddev;
+
+                // cooldown
+                static auto lastHit = std::chrono::steady_clock::now();
                 auto now = std::chrono::steady_clock::now();
-                float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+                float dt = std::chrono::duration<float>(now - lastHit).count();
 
-                // Wykrycie uderzenia - czy jest nagly wzrost glosnosci
-                float volumeDiff = vol - lastVolume;
-
-                if (lastVolume>0.0f){
-                    volumePercent = volumeDiff/lastVolume;
+                // detekcja uderzenia
+                bool hit = false;
+                if ((vol > threshold || vol > 0.8f)&& dt > 0.040f) {   // 40 ms musi byc miedzy uderzeniami
+                    hit = true;
+                    if (vol > threshold ){std::cout << "threshold";}
+                    if (vol > 1.2f ){std::cout << "1.2";}
+                    lastHit = now;
                 }
-                if (vol > maxVolume){
-                    maxVolume = vol;
-                }
+                // -------------------------------------------------------------------
+            //     if (vol > maxVolume){
+            //         maxVolume = vol;
+            //     }
 
-               bool hitDetected = (volumePercent > 20.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
-               //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
-                lastVolume = vol; 
+            //     //float secondsSinceWindowStart = std::chrono::duration<float>(now - widnowStartTime).count();
 
-                if (hitDetected){
+            //    bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
+                
+            //    //hitDetected = ((vol < lastVolume && (vol >1.5*lastLastVolume || vol > 2.0f*lastLastLastVolume || vol> 2.0f*lastLastLastLastVolume))    &&     vol > (0.1f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
+            //    //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
+
+            //     lastVolume = vol; 
+                if (hit){
                     currentNotes = findMatchingNotes(freq);
                     lastHitTime = now;
                 }
+                
+
                 std::string Estr = "---";
                 std::string Astr = "---";
                 std::string Dstr = "---";
@@ -1223,7 +1182,7 @@ int main()
                 tabCreatorDText.setString(myTabs.D);
                 tabCreatorGText.setString(myTabs.G);
                 //std::cout << "freq: " <<currentFreq << std::endl;
-                std::cout << "vol: " << currentVolume << std::endl;
+                std::cout << "vol: " << vol << std::endl;
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
@@ -1231,6 +1190,83 @@ int main()
                 
             }
             
+/*
+            if (screen_number == 2)
+{
+    static float lastVolume = 0.0f;
+    static float maxVolume = 0.006f;             // teraz static — nie resetuje się co iterację
+    static auto lastHitTime = std::chrono::steady_clock::now();
+    static auto lastSavedHitTime = std::chrono::steady_clock::now(); // blokada zapisu na X ms
+    const float saveCooldownMs = 100.0f;          // zapis max 1 na 10 ms
+    const int maxVolumePoints = 500;
+
+    if (tabCreatorRunning) {
+        // atomowe odczyty wartości z drugiego wątku
+        float freq = currentFreq.load(std::memory_order_relaxed);
+        float vol  = currentSF.load(std::memory_order_relaxed);
+        volumeHistory.push_back(vol);
+        if (volumeHistory.size() > maxVolumePoints) volumeHistory.erase(volumeHistory.begin()); // ograniczenie rozmiaru
+
+        std::vector<Note> currentNotes;
+        auto now = std::chrono::steady_clock::now();
+        float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+        float msSinceLastSave = std::chrono::duration<float, std::milli>(now - lastSavedHitTime).count();
+
+        // aktualizacja maxVolume (trzymać max z dłuższego okresu)
+        if (vol > maxVolume) maxVolume = vol;
+
+        // proste, stabilne kryterium piku:
+        // - względny wzrost vs poprzednia ramka
+        // - absolutny próg względem max
+        // - minimalny odstęp od poprzedniego zapisu (cooldown)
+        float relFactor = 1.5f; // dobierz (1.5..3.0)
+        bool hitDetected = false;
+        if (lastVolume > 0.0f) {
+            hitDetected = (vol > lastVolume * relFactor) && (vol > 0.2f * maxVolume) && (msSinceLastSave > saveCooldownMs);
+        } else {
+            // pierwszy odczyt nie traktujemy jako hit
+            hitDetected = false;
+        }
+        lastVolume = vol;
+
+        if (hitDetected) {
+            currentNotes = findMatchingNotes(freq);
+            lastHitTime = now;
+            lastSavedHitTime = now; // blokujemy zapisy na kolejne 10 ms
+        }
+
+        // zapis do tabów (bez zmian logicznych)
+        std::string Estr = "---", Astr = "---", Dstr = "---", Gstr = "---";
+        for (const Note &n : currentNotes) {
+            std::string Str = "-" + std::to_string(n.fret);
+            if (n.fret < 10) Str += "-";
+            if (n.stringName == 'E') Estr = Str;
+            if (n.stringName == 'A') Astr = Str;
+            if (n.stringName == 'D') Dstr = Str;
+            if (n.stringName == 'G') Gstr = Str;
+        }
+
+        myTabs.E += Estr;
+        myTabs.A += Astr;
+        myTabs.D += Dstr;
+        myTabs.G += Gstr;
+
+        // łamanie linii i limit długości (jak było)
+        if (myTabs.E.size() % 138 == 0) myTabs.E += "\n\n\n\n\n\n\n\n\n";
+        if (myTabs.A.size() % 138 == 0) myTabs.A += "\n\n\n\n\n\n\n\n\n";
+        if (myTabs.D.size() % 138 == 0) myTabs.D += "\n\n\n\n\n\n\n\n\n";
+        if (myTabs.G.size() % 138 == 0) myTabs.G += "\n\n\n\n\n\n\n\n\n";
+        if (myTabs.E.size() >= 552) tabCreatorRunning = false;
+
+        tabCreatorEText.setString(myTabs.E);
+        tabCreatorAText.setString(myTabs.A);
+        tabCreatorDText.setString(myTabs.D);
+        tabCreatorGText.setString(myTabs.G);
+
+        // USUŃ std::this_thread::sleep_for(std::chrono::milliseconds(50)); !!!
+        // zamiast spać — pozwól pętli GUI iterować normalnie (frame rate).
+*/
+//     }
             //drawing
             window.clear();
             background_sprite.draw(window);

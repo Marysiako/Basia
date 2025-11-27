@@ -161,6 +161,7 @@ float GetVolumeFromMicrophone(){
         }
        return volume; 
 }
+/*
 float GetSFFrameFromMicrophone()
 {
     const int frameBufferSize = 1024;  // (2*256) 
@@ -189,7 +190,9 @@ float GetSFFrameFromMicrophone()
     for (int k = 0; k <= frameBufferSize/2; k++)
         mag[k] = std::sqrt(fft_out[k][0]*fft_out[k][0] + fft_out[k][1]*fft_out[k][1]);
 
-    // --- poprzednia ramka (musi być statyczna!) ---
+        
+
+    // --- poprzednia ramka ---
     static std::vector<float> prevMag(frameBufferSize/2 + 1, 0.0f);
 
     float sf = 0.0f;
@@ -198,7 +201,7 @@ float GetSFFrameFromMicrophone()
         if (diff > 0) sf += diff;
     }
 
-    prevMag = mag;  // zapamiętaj do kolejnej funkcji
+    prevMag = mag;  // zapamietaj do kolejnej funkcji
 
     fftwf_destroy_plan(plan);
     fftwf_free(fft_out);
@@ -208,7 +211,68 @@ float GetSFFrameFromMicrophone()
 
     //return sf;
 }
+*/
+//Nowa funkcja 
+float GetSFFrameFromMicrophone()
+{
+    const int frameBufferSize = 1024;
+    const float cutoffHz = 150.f;
+    int startBin = (int)(cutoffHz * frameBufferSize / SAMPLE_RATE);
 
+    //---------------- POBRANIE PROBEK ----------------------
+    std::vector<float> fft_in(frameBufferSize);
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        fft_in.assign(g_samples.end() - frameBufferSize, g_samples.end());
+    }
+
+    //---------------- OKNO HANNINGA ----------------------------
+    for (int i = 0; i < frameBufferSize; i++)
+        fft_in[i] *= 0.5f * (1 - cos(2 * M_PI * i / (frameBufferSize - 1)));
+
+    // ---------------- FFT -----------------------------------
+    fftwf_complex* fft_out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * (frameBufferSize/2 + 1));
+    fftwf_plan plan = fftwf_plan_dft_r2c_1d(frameBufferSize, fft_in.data(), fft_out, FFTW_ESTIMATE);
+    fftwf_execute(plan);
+
+    std::vector<float> mag(frameBufferSize/2 + 1);
+    for (int k = 0; k <= frameBufferSize/2; k++)
+        mag[k] = sqrt(fft_out[k][0]*fft_out[k][0] + fft_out[k][1]*fft_out[k][1]);
+
+    //---------------- SMOOTHING MAGNITUDY--------------------------------
+    static std::vector<float> smoothMag(frameBufferSize/2 + 1, 0.0f);
+    float beta = 0.5f;
+    for (int k = 0; k <= frameBufferSize/2; k++)
+        smoothMag[k] = beta * smoothMag[k] + (1 - beta) * mag[k];
+
+    //---------------- SPECTRAL FLUX ---------------------------
+    static std::vector<float> prevMag(frameBufferSize/2 + 1, 0.0f);
+
+    float sf = 0.0f;
+    for (int k = startBin; k <= frameBufferSize/2; k++) {
+        float diff = smoothMag[k] - prevMag[k];
+        if (diff > 0) sf += diff;
+    }
+
+    prevMag = smoothMag;
+
+    // ---------------- SMOOTHING FLUXU -----------------------
+    static float sfSmooth = 0.0f;
+    float alpha = 0.15f;
+    sfSmooth = alpha * sf + (1 - alpha) * sfSmooth;
+
+    // ---------------- ROZNICA ------------------------
+    static float lastSF = 0.0f;
+    float sfDiff = sfSmooth - lastSF;
+    lastSF = sfSmooth;
+
+    if (sfDiff < 0) sfDiff = 0;
+
+    fftwf_destroy_plan(plan);
+    fftwf_free(fft_out);
+
+    return sfDiff;   // tylko roznica - onset
+}
     
 int GiveRandomIndex(int i)
 {
