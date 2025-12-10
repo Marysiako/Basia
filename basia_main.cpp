@@ -206,6 +206,11 @@ int main()
     TEXTURE freatboard_filled_sprite("graphic/fretboard_filled.png", 0, 200);
     TEXTURE background_bookChords_sprite("graphic/background_chords.png",0,0); //1
     TEXTURE background_bookScales_sprite("graphic/background_scales.png",0,0); //2
+    TEXTURE background_bookIntervals_sprite("graphic/background_intervals.png",0,0); //3
+    TEXTURE background_bookShapes_sprite("graphic/background_patterns.png",0,0); //4
+    TEXTURE background_bookCircle_sprite("graphic/background_circle.png",0,0); //5
+    TEXTURE background_bookRules_sprite("graphic/background_rules.png",0,0); //6
+    TEXTURE background_bookTabs_sprite("graphic/background_tabs.png",0,0); //7
 
     if (!random_sound_buffer.loadFromFile(random_sound_uget_string)) {
      std::cout << "Nie można załadować pliku audio "+random_sound_uget_string << std::endl;
@@ -251,12 +256,13 @@ int main()
     BUTTON abc_c_button(c_text, 600, 350, "medium");
 
     //BOOK BUTTON
-    BUTTON bookChordsButton("chords", 150, 50, "biggersmall");
-    BUTTON bookScalesButton("scales", 300, 50, "biggersmall");
-    BUTTON bookIntervalsButton("intervals", 450, 50, "biggersmall");
-    BUTTON bookPatternsButton("patterns", 600, 50, "biggersmall");
-    BUTTON bookCircleButton("circle", 750, 50, "biggersmall");
-    BUTTON bookRulesButton("rules", 900, 50, "biggersmall");
+    BUTTON bookChordsButton("chords", 50, 50, "biggersmall");
+    BUTTON bookScalesButton("scales", 180, 50, "biggersmall");
+    BUTTON bookIntervalsButton("intervals", 310, 50, "biggersmall");
+    BUTTON bookShapesButton("shapes", 440, 50, "biggersmall");
+    BUTTON bookCircleButton("circle", 570, 50, "biggersmall");
+    BUTTON bookRulesButton("rules", 700, 50, "biggersmall");
+    BUTTON bookTabsButton("tabs", 830, 50, "biggersmall");
 
     //TAB CREATOR
     BUTTON tabCreatorStartButton("start", 100, 50, "small");
@@ -792,7 +798,7 @@ int main()
                             bookPage = 3;
                         }
                         //patterns = 4
-                        sf::FloatRect patterns = bookPatternsButton.getSpriteGlobalBounds();
+                        sf::FloatRect patterns = bookShapesButton.getSpriteGlobalBounds();
                         if(patterns.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             bookPage = 4;
@@ -808,6 +814,12 @@ int main()
                         if(rules.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             bookPage = 6;
+                        }
+                        //tabs = 7;
+                        sf::FloatRect tabs = bookTabsButton.getSpriteGlobalBounds();
+                        if(tabs.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 7;
                         }
                         
                     }
@@ -1323,7 +1335,7 @@ int main()
             back_metronome_button.draw(window);
             window.display();
         }
-        // EFFECTS(TERAZ BOOK)
+        // BOOK
         if (screen_number == 4)
         {
             //
@@ -1331,15 +1343,18 @@ int main()
             window.clear();
             if (bookPage == 1){background_bookChords_sprite.draw(window);}
             if (bookPage == 2){background_bookScales_sprite.draw(window);}
-            if (bookPage == 3){background_bookScales_sprite.draw(window);}
-            if (bookPage == 4){background_bookScales_sprite.draw(window);}
-            if (bookPage == 5){background_bookScales_sprite.draw(window);}
-            if (bookPage == 6){background_bookScales_sprite.draw(window);}
+            if (bookPage == 3){background_bookIntervals_sprite.draw(window);}
+            if (bookPage == 4){background_bookShapes_sprite.draw(window);}
+            if (bookPage == 5){background_bookCircle_sprite.draw(window);}
+            if (bookPage == 6){background_bookRules_sprite.draw(window);}
+            if (bookPage == 7){background_bookTabs_sprite.draw(window);}
             bookChordsButton.draw(window);
             bookScalesButton.draw(window);
             bookIntervalsButton.draw(window);
-            bookPatternsButton.draw(window);
+            bookShapesButton.draw(window);
             bookCircleButton.draw(window);
+            bookRulesButton.draw(window);
+            bookTabsButton.draw(window);
             back_button.draw(window);
             window.display();
         }
