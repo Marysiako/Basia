@@ -2,10 +2,8 @@
 /*
 
 TAK DZIALA:
- g++ basia_main2.cpp BUTTON.cpp functions.cpp SOUND.cpp TEXTURE.cpp FRET.cpp \
-    -o sfml-app \
-    -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio \
-    -lportaudio -lfftw3
+ g++ basia_main.cpp BUTTON.cpp functions.cpp SOUND.cpp TEXTURE.cpp FRET.cpp     -o sfml-app     -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio     -lportaudio -lfftw3f
+
 
 */
 #include<SFML/Graphics.hpp>
@@ -48,6 +46,9 @@ int screen_number = 0; // 0-MENU, 1-TUNER, 2-TAB CREATOR, 3-METRONOME, 4-EFFECTS
 int game = 0;
 // DO TUNER
 double frequency = 1;
+
+//DO BOOK
+int bookPage = 1;
 
 // DO METRONOM------------------------------------------------------------------------------
 int tempo = 120; // Tempo (bpm)
@@ -203,6 +204,8 @@ int main()
     TEXTURE metronome_tabs_sprite("graphic/background_training.png", 0, 0);     //Tabs graphic
     TEXTURE fretboard_clear_sprite("graphic/fretboard.png", 0, 200);
     TEXTURE freatboard_filled_sprite("graphic/fretboard_filled.png", 0, 200);
+    TEXTURE background_bookChords_sprite("graphic/background_chords.png",0,0); //1
+    TEXTURE background_bookScales_sprite("graphic/background_scales.png",0,0); //2
 
     if (!random_sound_buffer.loadFromFile(random_sound_uget_string)) {
      std::cout << "Nie można załadować pliku audio "+random_sound_uget_string << std::endl;
@@ -246,6 +249,14 @@ int main()
     BUTTON abc_a_button(a_text, 200, 350, "medium");
     BUTTON abc_b_button(b_text, 400, 350, "medium");
     BUTTON abc_c_button(c_text, 600, 350, "medium");
+
+    //BOOK BUTTON
+    BUTTON bookChordsButton("chords", 150, 50, "biggersmall");
+    BUTTON bookScalesButton("scales", 300, 50, "biggersmall");
+    BUTTON bookIntervalsButton("intervals", 450, 50, "biggersmall");
+    BUTTON bookPatternsButton("patterns", 600, 50, "biggersmall");
+    BUTTON bookCircleButton("circle", 750, 50, "biggersmall");
+    BUTTON bookRulesButton("rules", 900, 50, "biggersmall");
 
     //TAB CREATOR
     BUTTON tabCreatorStartButton("start", 100, 50, "small");
@@ -750,7 +761,7 @@ int main()
                     }
                 }
             }
-            // EFFECTS
+            // EFFECTS (BOOK)
             if(screen_number == 4)
             {
                 if(event.type == sf::Event::MouseButtonPressed)
@@ -762,6 +773,43 @@ int main()
                         {
                             screen_number = 0;
                         }
+                        //chords - 1
+                        sf::FloatRect chords = bookChordsButton.getSpriteGlobalBounds();
+                        if(chords.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 1;
+                        }
+                        //scales = 2
+                        sf::FloatRect scales = bookScalesButton.getSpriteGlobalBounds();
+                        if(scales.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 2;
+                        }
+                        //intervals = 3
+                        sf::FloatRect intervals = bookIntervalsButton.getSpriteGlobalBounds();
+                        if(intervals.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 3;
+                        }
+                        //patterns = 4
+                        sf::FloatRect patterns = bookPatternsButton.getSpriteGlobalBounds();
+                        if(patterns.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 4;
+                        }
+                        //circle = 5;
+                        sf::FloatRect circle = bookCircleButton.getSpriteGlobalBounds();
+                        if(circle.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 5;
+                        }
+                        //rules = 6;
+                        sf::FloatRect rules = bookRulesButton.getSpriteGlobalBounds();
+                        if(rules.contains(float(event.mouseButton.x),(event.mouseButton.y)))
+                        {
+                            bookPage = 6;
+                        }
+                        
                     }
                 }
             }
@@ -1130,19 +1178,22 @@ int main()
                     if (vol > 1.2f ){std::cout << "1.2";}
                     lastHit = now;
                 }
-                // -------------------------------------------------------------------
-            //     if (vol > maxVolume){
-            //         maxVolume = vol;
-            //     }
+            /*
+                    // -------------------------------------------------------------------
+                //     if (vol > maxVolume){
+                //         maxVolume = vol;
+                //     }
 
-            //     //float secondsSinceWindowStart = std::chrono::duration<float>(now - widnowStartTime).count();
+                //     //float secondsSinceWindowStart = std::chrono::duration<float>(now - widnowStartTime).count();
 
-            //    bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
-                
-            //    //hitDetected = ((vol < lastVolume && (vol >1.5*lastLastVolume || vol > 2.0f*lastLastLastVolume || vol> 2.0f*lastLastLastLastVolume))    &&     vol > (0.1f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
-            //    //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
+                //    bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
+                    
+                //    //hitDetected = ((vol < lastVolume && (vol >1.5*lastLastVolume || vol > 2.0f*lastLastLastVolume || vol> 2.0f*lastLastLastLastVolume))    &&     vol > (0.1f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
+                //    //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
 
-            //     lastVolume = vol; 
+                //     lastVolume = vol;
+                // 
+            */ 
                 if (hit){
                     currentNotes = findMatchingNotes(freq);
                     lastHitTime = now;
@@ -1190,83 +1241,6 @@ int main()
                 
             }
             
-/*
-            if (screen_number == 2)
-{
-    static float lastVolume = 0.0f;
-    static float maxVolume = 0.006f;             // teraz static — nie resetuje się co iterację
-    static auto lastHitTime = std::chrono::steady_clock::now();
-    static auto lastSavedHitTime = std::chrono::steady_clock::now(); // blokada zapisu na X ms
-    const float saveCooldownMs = 100.0f;          // zapis max 1 na 10 ms
-    const int maxVolumePoints = 500;
-
-    if (tabCreatorRunning) {
-        // atomowe odczyty wartości z drugiego wątku
-        float freq = currentFreq.load(std::memory_order_relaxed);
-        float vol  = currentSF.load(std::memory_order_relaxed);
-        volumeHistory.push_back(vol);
-        if (volumeHistory.size() > maxVolumePoints) volumeHistory.erase(volumeHistory.begin()); // ograniczenie rozmiaru
-
-        std::vector<Note> currentNotes;
-        auto now = std::chrono::steady_clock::now();
-        float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
-        float msSinceLastSave = std::chrono::duration<float, std::milli>(now - lastSavedHitTime).count();
-
-        // aktualizacja maxVolume (trzymać max z dłuższego okresu)
-        if (vol > maxVolume) maxVolume = vol;
-
-        // proste, stabilne kryterium piku:
-        // - względny wzrost vs poprzednia ramka
-        // - absolutny próg względem max
-        // - minimalny odstęp od poprzedniego zapisu (cooldown)
-        float relFactor = 1.5f; // dobierz (1.5..3.0)
-        bool hitDetected = false;
-        if (lastVolume > 0.0f) {
-            hitDetected = (vol > lastVolume * relFactor) && (vol > 0.2f * maxVolume) && (msSinceLastSave > saveCooldownMs);
-        } else {
-            // pierwszy odczyt nie traktujemy jako hit
-            hitDetected = false;
-        }
-        lastVolume = vol;
-
-        if (hitDetected) {
-            currentNotes = findMatchingNotes(freq);
-            lastHitTime = now;
-            lastSavedHitTime = now; // blokujemy zapisy na kolejne 10 ms
-        }
-
-        // zapis do tabów (bez zmian logicznych)
-        std::string Estr = "---", Astr = "---", Dstr = "---", Gstr = "---";
-        for (const Note &n : currentNotes) {
-            std::string Str = "-" + std::to_string(n.fret);
-            if (n.fret < 10) Str += "-";
-            if (n.stringName == 'E') Estr = Str;
-            if (n.stringName == 'A') Astr = Str;
-            if (n.stringName == 'D') Dstr = Str;
-            if (n.stringName == 'G') Gstr = Str;
-        }
-
-        myTabs.E += Estr;
-        myTabs.A += Astr;
-        myTabs.D += Dstr;
-        myTabs.G += Gstr;
-
-        // łamanie linii i limit długości (jak było)
-        if (myTabs.E.size() % 138 == 0) myTabs.E += "\n\n\n\n\n\n\n\n\n";
-        if (myTabs.A.size() % 138 == 0) myTabs.A += "\n\n\n\n\n\n\n\n\n";
-        if (myTabs.D.size() % 138 == 0) myTabs.D += "\n\n\n\n\n\n\n\n\n";
-        if (myTabs.G.size() % 138 == 0) myTabs.G += "\n\n\n\n\n\n\n\n\n";
-        if (myTabs.E.size() >= 552) tabCreatorRunning = false;
-
-        tabCreatorEText.setString(myTabs.E);
-        tabCreatorAText.setString(myTabs.A);
-        tabCreatorDText.setString(myTabs.D);
-        tabCreatorGText.setString(myTabs.G);
-
-        // USUŃ std::this_thread::sleep_for(std::chrono::milliseconds(50)); !!!
-        // zamiast spać — pozwól pętli GUI iterować normalnie (frame rate).
-*/
-//     }
             //drawing
             window.clear();
             background_sprite.draw(window);
@@ -1349,12 +1323,23 @@ int main()
             back_metronome_button.draw(window);
             window.display();
         }
-        // EFFECTS
+        // EFFECTS(TERAZ BOOK)
         if (screen_number == 4)
         {
+            //
             //drawing
             window.clear();
-            background_cs_sprite.draw(window);
+            if (bookPage == 1){background_bookChords_sprite.draw(window);}
+            if (bookPage == 2){background_bookScales_sprite.draw(window);}
+            if (bookPage == 3){background_bookScales_sprite.draw(window);}
+            if (bookPage == 4){background_bookScales_sprite.draw(window);}
+            if (bookPage == 5){background_bookScales_sprite.draw(window);}
+            if (bookPage == 6){background_bookScales_sprite.draw(window);}
+            bookChordsButton.draw(window);
+            bookScalesButton.draw(window);
+            bookIntervalsButton.draw(window);
+            bookPatternsButton.draw(window);
+            bookCircleButton.draw(window);
             back_button.draw(window);
             window.display();
         }
