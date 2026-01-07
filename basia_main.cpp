@@ -170,6 +170,78 @@ std::vector<Note>  findMatchingNotes(float freq) {
     }
     return matchingNotes;
 }
+
+static std::vector<float> volumeHistory;  //historia Spectral FLux energi
+static std::vector<float>  history; // historia SF do liczenia progu adaptacyjnego
+static std::vector<float> frequencyHistory; //historia odczytow czestotliwosci
+static std::vector<float> dtHistory; // historia czasow odczytow danych
+
+struct DetectedNote {
+    float time;              // dt uderzenia
+    std::vector<Note> notes; // możliwe dźwięki
+};
+std::vector<DetectedNote> Przelicz(
+    const std::vector<float>& energyHistory,
+    const std::vector<float>& frequencyHistory,
+    const std::vector<float>& dtHistory
+) {
+    std::vector<DetectedNote> result;
+
+    const float ENERGY_THRESHOLD = 0.06f;   // do dostrojenia
+    const int FREQ_DELAY = 5;                // ile ramek po ataku czytać freq
+
+    for (size_t i = 1; i < energyHistory.size() - 1; ++i) {
+
+        // lokalne maksimum + próg
+        if (energyHistory[i] > ENERGY_THRESHOLD &&
+            energyHistory[i] > energyHistory[i - 1] &&
+            energyHistory[i] > energyHistory[i + 1]) {
+
+            size_t freqIndex = i + FREQ_DELAY;
+            if (freqIndex >= frequencyHistory.size())
+                continue;
+
+            float freq = frequencyHistory[freqIndex];
+
+            auto matchingNotes = findMatchingNotes(freq);
+
+            if (!matchingNotes.empty()) {
+                DetectedNote dn;
+                dn.time = dtHistory[i];
+                dn.notes = matchingNotes;
+                result.push_back(dn);
+            }
+        }
+    }
+
+    return result;
+}
+void PrintNote(const Note& note) {
+    std::cout
+        << "struna: " << note.stringName
+        << ", prog: " << note.fret
+        << ", freq: " << note.frequency << " Hz";
+}
+void PrintDetectedNotes(const std::vector<DetectedNote>& detectedNotes) {
+    std::cout << "Wykryte dzwieki:\n";
+    std::cout << "-----------------------------\n";
+
+    for (const auto& dn : detectedNotes) {
+        std::cout << "Czas uderzenia: "
+                  << dn.time << " s\n";
+
+        std::cout << "Mozliwe dzwieki:\n";
+
+        for (const auto& note : dn.notes) {
+            std::cout << "  - ";
+            PrintNote(note);
+            std::cout << "\n";
+        }
+
+        std::cout << "-----------------------------\n";
+    }
+}
+
 void saveTabToFile(const TabFrame& tab, const std::string& filename) {
     std::ofstream outFile(filename); 
     if (!outFile) {
@@ -183,6 +255,87 @@ void saveTabToFile(const TabFrame& tab, const std::string& filename) {
     outFile << tab.E << "\n";
 
     outFile.close(); 
+}
+
+//do odczytu po analizie całosci na koniec a nie na bierzaco jak powyzsza funkcja
+
+void SaveTabsToFile(
+    const std::vector<DetectedNote>& detectedNotes,
+    const std::string& filename
+) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Nie mozna otworzyc pliku: " << filename << "\n";
+        return;
+    }
+
+    std::string G = "G:";
+    std::string D = "D:";
+    std::string A = "A:";
+    std::string E = "E:";
+
+    for (const auto& dn : detectedNotes) {
+
+        // domyslnie cisza
+        std::string g = "----";
+        std::string d = "----";
+        std::string a = "----";
+        std::string e = "----";
+
+        // jesli w tej samej chwili kilka dzwiekow (akord)
+        for (const auto& note : dn.notes) {
+
+            std::string fretStr = std::to_string(note.fret);
+
+            // format szerokosci 4 znakow
+            if (fretStr.size() == 1)
+                fretStr = "-" + fretStr + "--"; // -3--
+            else if (fretStr.size() == 2)
+                fretStr = fretStr + "--";       // 12--
+            else
+                fretStr = fretStr.substr(0, 4);
+
+            if (note.stringName == 'G') g = fretStr;
+            if (note.stringName == 'D') d = fretStr;
+            if (note.stringName == 'A') a = fretStr;
+            if (note.stringName == 'E') e = fretStr;
+        }
+
+        G += g;
+        D += d;
+        A += a;
+        E += e;
+    }
+
+    file << G << "\n";
+    file << D << "\n";
+    file << A << "\n";
+    file << E << "\n";
+
+    file.close();
+}
+
+void saveHistoryToFile(){
+    std::ofstream outFile("history.txt"); 
+    if (!outFile) {
+        std::cerr << "Nie można otworzyć pliku do zapisu!\n";
+        return;
+    }
+    size_t size = std::min({  // biore najmniejsza dlugosc chociaz powinny byc takie same
+        dtHistory.size(), 
+        volumeHistory.size(), 
+        frequencyHistory.size() 
+    });
+
+    for (size_t i = 0; i < size; ++i)       // dt vol freq
+    {
+        outFile << dtHistory[i] << " "
+                << volumeHistory[i] << " "
+                << frequencyHistory[i] << "\n";
+    }
+
+    outFile.close();
+    
 }
 int main()
 {
@@ -278,8 +431,7 @@ int main()
     tabCreatorDText.setPosition(10, 125);
     sf::Text tabCreatorGText("G", font, 10);
     tabCreatorGText.setPosition(10, 100);
-    static std::vector<float> volumeHistory;  //historia Spectral FLux energi
-    static std::vector<float>  history; // historia SF do liczenia progu adaptacyjnego
+    
 
     //SOUNDS
     std::string sound_names[]  = {"e","f","fs","g","gs","a","as","b","c","cs","d","ds"};
@@ -644,6 +796,15 @@ int main()
                             //zapisuje aktualny stan myTabs i zapisuje do pliku txt
                             tabCreatorRunning = false;
                             saveTabToFile(myTabs, "moja_tabulaturaBasia");
+                            saveHistoryToFile();
+                            auto detected = Przelicz(
+                                volumeHistory,
+                                frequencyHistory,
+                                dtHistory
+                            );
+
+                            PrintDetectedNotes(detected);
+                            SaveTabsToFile(detected, "tabulatura.txt");
                         }
                     }
                     if(event.mouseButton.button == sf::Mouse::Left)
@@ -662,6 +823,7 @@ int main()
                             tabCreatorDText.setString(myTabs.D);
                             tabCreatorGText.setString(myTabs.G);    
                             volumeHistory.clear();
+                            frequencyHistory.clear();
                         }
                     }
                 }
@@ -1141,9 +1303,12 @@ int main()
 
             float volumePercent =0.0f;
             float maxVolume = 0.006f;
-            static auto lastHitTime = std::chrono::steady_clock::now();  
+            static auto lastHitTime = std::chrono::steady_clock::now(); 
+            static auto runningStartTime = std::chrono::steady_clock::now();  
+            static auto runningTime = std::chrono::steady_clock::now();  
             //static auto widnowStartTime = std::chrono::steady_clock::now();   
             bool hitDetected = false;     
+            static int hitCounting = 0;    // odliczanie petli po uderzeniu zeby wziac czestotliwosc po chwili
             
             const int maxVolumePoints = 500;
 
@@ -1151,8 +1316,14 @@ int main()
             if (tabCreatorRunning){
                 float freq = GetFrequencyFromMicrophone();
                 float vol = GetSFFrameFromMicrophone();
+                auto now = std::chrono::steady_clock::now();
+                //runningTime = (now - runningStartTime);  
                 volumeHistory.push_back(vol);
-                std::vector<Note> currentNotes;
+                frequencyHistory.push_back(freq);
+                float timeSec = std::chrono::duration<float>(now - runningStartTime).count();  //przeliczenie minionego czasu na sekundy
+                dtHistory.push_back(timeSec);
+                std::vector<Note> machingNotes; //tymczasowa do szukania pasujacych w kilku petlach bo moze sie roznie ustabilizowac
+                std::vector<Note> currentNotes;     // ostateczne po killu petlach po wykryciu uderzenia
                 //auto now = std::chrono::steady_clock::now();
                 //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
 
@@ -1167,27 +1338,27 @@ int main()
                 for (float v : history) mean += v;
                 mean /= history.size();
 
-                // obliczenie odchylenie
-                float var = 0;
+                // obliczenie odchylenie 
+                float var = 0;      //wariancja
                 for (float v : history) var += (v - mean) * (v - mean);
                 var /= history.size();
 
-                float stddev = sqrt(var);
+                float stddev = sqrt(var);   //odchylenie standardowe
 
                 // prog
                 float threshold = mean + 0.8f * stddev;
 
                 // cooldown
                 static auto lastHit = std::chrono::steady_clock::now();
-                auto now = std::chrono::steady_clock::now();
+                now = std::chrono::steady_clock::now();
                 float dt = std::chrono::duration<float>(now - lastHit).count();
 
                 // detekcja uderzenia
                 bool hit = false;
-                if ((vol > threshold || vol > 0.8f)&& dt > 0.040f) {   // 40 ms musi byc miedzy uderzeniami
+                if ((vol > threshold || vol > 0.8f)&& dt > 0.060f && vol > 0.05f) {   // 40 ms musi byc miedzy uderzeniami
                     hit = true;
                     if (vol > threshold ){std::cout << "threshold";}
-                    if (vol > 1.2f ){std::cout << "1.2";}
+                    if (vol > 0.8f ){std::cout << "0.8";}
                     lastHit = now;
                 }
             /*
@@ -1206,12 +1377,33 @@ int main()
                 //     lastVolume = vol;
                 // 
             */ 
+                //std::this_thread::sleep_for(std::chrono::milliseconds(20)); 
                 if (hit){
-                    currentNotes = findMatchingNotes(freq);
+                    //freq = GetFrequencyFromMicrophone();
+                    hitCounting = 4;
                     lastHitTime = now;
+                    
+                }
+                if (hitCounting>0){
+                    hitCounting--;
+                    machingNotes = findMatchingNotes(freq);
+                    if(hitCounting==0){
+                        currentNotes = machingNotes;
+                        std::cout << "\n wykryto dzwiek o freq: " << freq << "\n";
+                        
+                    }
+                    
                 }
                 
-
+                /*
+                 if (hit){
+                    //freq = GetFrequencyFromMicrophone();
+                   currentNotes = findMatchingNotes(freq);
+                    std::cout << "\n wykryto dzwiek o freq: " << freq << "\n";
+                    lastHitTime = now;
+                    
+                }
+                */
                 std::string Estr = "---";
                 std::string Astr = "---";
                 std::string Dstr = "---";
@@ -1244,7 +1436,6 @@ int main()
                 tabCreatorAText.setString(myTabs.A);
                 tabCreatorDText.setString(myTabs.D);
                 tabCreatorGText.setString(myTabs.G);
-                //std::cout << "freq: " <<currentFreq << std::endl;
                 std::cout << "vol: " << vol << std::endl;
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
@@ -1252,6 +1443,7 @@ int main()
                 std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
                 
             }
+            
             
             //drawing
             window.clear();

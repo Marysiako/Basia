@@ -5,6 +5,7 @@
 #include <vector>
 #include <SFML/Audio.hpp>
 #include <cstdlib>
+#include <stack>
 
 #include <mutex>
 #include <fftw3.h>
@@ -21,19 +22,119 @@
 std::vector<float> g_samples(BUFFER_SIZE, 0.0f);
 std::mutex g_mutex;         // zabezpiecza przed jednoczesnym dostepem z dwoch watkow (zapiywaniem i czytaniem danych do wizualizacji wykresu)
 
+std::stack<std::pair<int,int>> descending;
+int offset = 0;
+int lastHit = -100000;
+float HIT_DETECTION_VOLUME = 0.1f;
+bool isHit = false;
+int counter = 1;
+
+void resetHitDetection() {
+    offset = 0;
+    while(descending.size())descending.pop();
+    isHit = false;
+    lastHit = -100000;
+}
+
+bool getIsHit() {
+    bool returnValue = isHit;
+    isHit = false;
+    return returnValue;
+}
+
+
+
+bool DetectHit(int volumeBufferSize){
+    std::vector<float> fft_in(volumeBufferSize);
+    bool returnValue = false;
+    fft_in =  std::vector<float>(g_samples.end() - volumeBufferSize, g_samples.end());
+    for(int i = 0;i < fft_in.size();i++) {
+        while(descending.size() && std::abs(fft_in[i]) >= descending.top().first) descending.pop();
+        if(std::abs(fft_in[i]) > HIT_DETECTION_VOLUME && offset + i - lastHit > (SAMPLE_RATE * 0.15f)) {
+            if(descending.size() == 0) {
+                returnValue = true;
+                lastHit = offset + i;
+            } else {
+                if(offset + i - descending.top().second > (SAMPLE_RATE * 0.5f)) {
+                        returnValue = true;
+                        lastHit = offset + i;
+                }
+            }
+        }
+        descending.push({std::abs(fft_in[i]), i + offset});
+
+    }
+
+    offset += volumeBufferSize;
+    return returnValue;
+}
+    
 // Callback PortAudio - obsluga (Ppobiera probke audio i zaspisuje do g_samples)
 static int audioCallback(const void *inputBuffer, void *, unsigned long framesPerBuffer,
                          const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void *) {
     const float *in = static_cast<const float*>(inputBuffer);
+    std::lock_guard<std::mutex> lock(g_mutex);
     if (!in) return paContinue; // jesli jest cisza kontynuuj
-
-    std::lock_guard<std::mutex> lock(g_mutex);  //lock_guard blokuje tylko na czas bycia w {} i sam odblokowuje
     std::move(g_samples.begin() + framesPerBuffer, g_samples.end(), g_samples.begin()); //przesuwam w lewo o liczbe probek 
     std::copy(in, in + framesPerBuffer, g_samples.end() - framesPerBuffer); //dodanie nowych danych na koniec bufora
 
+    bool newIsHit = DetectHit(framesPerBuffer);
+    isHit = isHit || newIsHit;
     return paContinue;
 }
 PaStream* stream = nullptr;
+
+/*
+bool DetectHit(int volumeBufferSize, int start, std::vector<int16_t> samples) {
+    std::vector<int16_t> fft_in(volumeBufferSize);
+    bool returnValue = false;
+    for (int i = 0; i < volumeBufferSize;i++) {
+        if (i + start >= samples.size()) {
+            fft_in[i] = 0;
+        }
+        else {
+            fft_in[i] = samples[i + start];
+        }
+
+    }
+
+    for (int i = 0;i < fft_in.size();i++) {
+        while (descending.size() && std::abs(fft_in[i]) >= descending.top().first) descending.pop();
+        if (std::abs(fft_in[i]) > HIT_DETECTION_VOLUME && offset + i - lastHit > (SAMPLE_RATE * 0.15f)) {
+            int maxi = 0;
+            for (int j = i + offset - SAMPLE_RATE * 0.04; j < i + offset - SAMPLE_RATE * 0.02;j++) {
+                maxi = std::max(maxi, std::abs(samples[j]));
+            }
+            if (maxi > std::abs(fft_in[i]) * 0.94) {
+                descending.push({ std::abs(fft_in[i]), i + offset });
+                continue;
+            }
+            if (descending.size() == 0) {
+                std::cout << counter << " " << i + offset << " " << std::abs(fft_in[i]) << std::endl;
+                returnValue = true;
+                counter++;
+                lastHit = offset + i;
+                drawHorizontal(lastHit, 0, 255, 0);
+            }
+            else {
+                if (offset + i - descending.top().second > (SAMPLE_RATE * 0.05f)) {
+                    std::cout <<counter<<" "<< i + offset << " " << std::abs(fft_in[i]) << " " << descending.top().second << std::endl;
+                    returnValue = true;
+                    lastHit = offset + i;
+                    counter++;
+                    drawHorizontal(lastHit, 0, 255, 0);
+                    drawHorizontal(descending.top().second, 255, 0, 0);
+                }
+            }
+        }
+        descending.push({ std::abs(fft_in[i]), i + offset });
+
+    }
+
+    offset += volumeBufferSize;
+    return returnValue;
+}
+*/
 
 bool InitAudio() {
     Pa_Initialize();
@@ -161,6 +262,9 @@ float GetVolumeFromMicrophone(){
         }
        return volume; 
 }
+
+
+
 /*
 float GetSFFrameFromMicrophone()
 {
@@ -248,7 +352,7 @@ float GetSFFrameFromMicrophone()
     //---------------- SPECTRAL FLUX ---------------------------
     static std::vector<float> prevMag(frameBufferSize/2 + 1, 0.0f);
 
-    float sf = 0.0f;
+    float sf = 0.0f;                                            //sf to suma tylko dodatnich roznic magnitud danej i poprzedniej ramki dla wszyskich czestotliwosci powyzej 150Hz
     for (int k = startBin; k <= frameBufferSize/2; k++) {
         float diff = smoothMag[k] - prevMag[k];
         if (diff > 0) sf += diff;
