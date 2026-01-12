@@ -1299,53 +1299,47 @@ int main()
         if (screen_number == 2)
         {
 
-            static float lastVolume = 0.0f; 
-
-            float volumePercent =0.0f;
-            float maxVolume = 0.006f;
             static auto lastHitTime = std::chrono::steady_clock::now(); 
             static auto runningStartTime = std::chrono::steady_clock::now();  
-            static auto runningTime = std::chrono::steady_clock::now();  
-            //static auto widnowStartTime = std::chrono::steady_clock::now();   
-            bool hitDetected = false;     
             static int hitCounting = 0;    // odliczanie petli po uderzeniu zeby wziac czestotliwosc po chwili
             
             const int maxVolumePoints = 500;
 
             //ALgorytm porownujacy okna - spectral flux
             if (tabCreatorRunning){
+                // Odczyt czestotliwosci i energii miedzy dwoma oknami (spectral flux)
                 float freq = GetFrequencyFromMicrophone();
-                float vol = GetSFFrameFromMicrophone();
-                auto now = std::chrono::steady_clock::now();
-                //runningTime = (now - runningStartTime);  
+                float vol = GetSFFrameFromMicrophone(); //energia
                 volumeHistory.push_back(vol);
                 frequencyHistory.push_back(freq);
+
+                // Obliczenie czasu odczytu od poczatku tabulatury (do analizy wykresow)
+                auto now = std::chrono::steady_clock::now();
                 float timeSec = std::chrono::duration<float>(now - runningStartTime).count();  //przeliczenie minionego czasu na sekundy
                 dtHistory.push_back(timeSec);
-                std::vector<Note> machingNotes; //tymczasowa do szukania pasujacych w kilku petlach bo moze sie roznie ustabilizowac
-                std::vector<Note> currentNotes;     // ostateczne po killu petlach po wykryciu uderzenia
-                //auto now = std::chrono::steady_clock::now();
-                //float secondsSinceLastHit = std::chrono::duration<float>(now - lastHitTime).count();
+
+                std::vector<Note> machingNotes; // tymczasowy wektor do szukania pasujacych do dzwiekow czestotliwosci w kilku petlach bo moze sie roznie ustabilizowac (po ok. 300ms czestotliwosc jest poprawna)
+                std::vector<Note> currentNotes;     // ostateczne odczytane dzwieki po killu petlach po wykryciu uderzenia
 
                 const int N = 20;
 
                 //--------- PROG ADAPTACYJNY ------------------
                 history.push_back(vol);
-                if (history.size() > N) history.erase(history.begin());
+                if (history.size() > N) history.erase(history.begin()); //history.erase usuwa najstarszy element begin i przesuwa w lewo elementy
 
                 // obliczenie sredniej
                 float mean = 0;
                 for (float v : history) mean += v;
                 mean /= history.size();
 
-                // obliczenie odchylenie 
+                // obliczenie odchylenia
                 float var = 0;      //wariancja
                 for (float v : history) var += (v - mean) * (v - mean);
                 var /= history.size();
 
                 float stddev = sqrt(var);   //odchylenie standardowe
 
-                // prog
+                // prog adaptacyjny jako srednia + 0.8odchylenia standardowego
                 float threshold = mean + 0.8f * stddev;
 
                 // cooldown
@@ -1355,32 +1349,16 @@ int main()
 
                 // detekcja uderzenia
                 bool hit = false;
-                if ((vol > threshold || vol > 0.8f)&& dt > 0.060f && vol > 0.05f) {   // 40 ms musi byc miedzy uderzeniami
+                if ((vol > threshold || vol > 0.5f)&& dt > 0.060f && vol > 0.05f) {   // 60 ms musi byc miedzy uderzeniami
                     hit = true;
                     if (vol > threshold ){std::cout << "threshold";}
-                    if (vol > 0.8f ){std::cout << "0.8";}
+                    if (vol > 0.5f ){std::cout << "0.5";}
                     lastHit = now;
                 }
-            /*
-                    // -------------------------------------------------------------------
-                //     if (vol > maxVolume){
-                //         maxVolume = vol;
-                //     }
 
-                //     //float secondsSinceWindowStart = std::chrono::duration<float>(now - widnowStartTime).count();
-
-                //    bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.2f*maxVolume)     &&       secondsSinceLastHit > 0.3f);
-                    
-                //    //hitDetected = ((vol < lastVolume && (vol >1.5*lastLastVolume || vol > 2.0f*lastLastLastVolume || vol> 2.0f*lastLastLastLastVolume))    &&     vol > (0.1f*maxVolume)     &&       secondsSinceLastHit > 0.2f);
-                //    //bool hitDetected = (vol > 2.0f*lastVolume     &&     vol > (0.10f*maxVolume)  );
-
-                //     lastVolume = vol;
-                // 
-            */ 
                 //std::this_thread::sleep_for(std::chrono::milliseconds(20)); 
                 if (hit){
-                    //freq = GetFrequencyFromMicrophone();
-                    hitCounting = 4;
+                    hitCounting = 4;        //szukam w kilku nastepnych petlach pasujacych dzwiekow
                     lastHitTime = now;
                     
                 }
@@ -1395,20 +1373,13 @@ int main()
                     
                 }
                 
-                /*
-                 if (hit){
-                    //freq = GetFrequencyFromMicrophone();
-                   currentNotes = findMatchingNotes(freq);
-                    std::cout << "\n wykryto dzwiek o freq: " << freq << "\n";
-                    lastHitTime = now;
-                    
-                }
-                */
+                //Przypisanie podstawowych stringow jako kolejna czesc tabulatury
                 std::string Estr = "---";
                 std::string Astr = "---";
                 std::string Dstr = "---";
                 std::string Gstr = "---";
 
+                //Jesli sa jakies znalezione dzwieki na strunach to zamien stringi na takie z tymi dzwiekami
                 for (Note n: currentNotes){
                       std::string Str = "-" + std::to_string(n.fret);
                     if (n.fret < 10) {   // jesli liczba jednocyfrowa, dopisz "-"
@@ -1420,13 +1391,13 @@ int main()
                     if (n.stringName == 'G'){ Gstr = Str;}
 
                 }
-                
+                //Dopisanie kolejnej czesci tabluatury do stringow dla kazdej struny
                 myTabs.E += Estr;
                 myTabs.A += Astr;
                 myTabs.D += Dstr;
                 myTabs.G += Gstr;
                 //std::cout <<myTabs.E.size();
-                // Kolejna linia
+                // Ronienie kolejnej lini zeby nie leciala tabulatura poza ekran tylko kolejne linie zaczynaly sie nizej
                 if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
                 if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
@@ -1440,10 +1411,8 @@ int main()
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //zeby nie lecialo za szybko i sie nie wieszalo
-                
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); //usypiam watek na 100ms zeby petla nie leciala za szybko i sie nie wieszalo 
             }
-            
             
             //drawing
             window.clear();
@@ -1453,6 +1422,7 @@ int main()
             tabCreatorSaveButton.draw(window);
             tabCreatorResetButton.draw(window);
 
+            //Rysowanie zielonego wykresu spectral flux na dole ekranu (duzy pik oznacza uderzenie)
             if (!volumeHistory.empty()) {
                 sf::VertexArray lines(sf::LineStrip, volumeHistory.size());
                 for (size_t i = 0; i < volumeHistory.size(); i++) {
