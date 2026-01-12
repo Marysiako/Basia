@@ -176,143 +176,50 @@ static std::vector<float>  history; // historia SF do liczenia progu adaptacyjne
 static std::vector<float> frequencyHistory; //historia odczytow czestotliwosci
 static std::vector<float> dtHistory; // historia czasow odczytow danych
 
-struct DetectedNote {
-    float time;              // dt uderzenia
-    std::vector<Note> notes; // możliwe dźwięki
-};
-std::vector<DetectedNote> Przelicz(
-    const std::vector<float>& energyHistory,
-    const std::vector<float>& frequencyHistory,
-    const std::vector<float>& dtHistory
-) {
-    std::vector<DetectedNote> result;
 
-    const float ENERGY_THRESHOLD = 0.06f;   // do dostrojenia
-    const int FREQ_DELAY = 5;                // ile ramek po ataku czytać freq
 
-    for (size_t i = 1; i < energyHistory.size() - 1; ++i) {
+//Odczytane na zywo dziweki
+std::vector<std::string> splitLines(const std::string& s)
+{
+    std::vector<std::string> lines;
+    std::stringstream ss(s);
+    std::string line;
 
-        // lokalne maksimum + próg
-        if (energyHistory[i] > ENERGY_THRESHOLD &&
-            energyHistory[i] > energyHistory[i - 1] &&
-            energyHistory[i] > energyHistory[i + 1]) {
-
-            size_t freqIndex = i + FREQ_DELAY;
-            if (freqIndex >= frequencyHistory.size())
-                continue;
-
-            float freq = frequencyHistory[freqIndex];
-
-            auto matchingNotes = findMatchingNotes(freq);
-
-            if (!matchingNotes.empty()) {
-                DetectedNote dn;
-                dn.time = dtHistory[i];
-                dn.notes = matchingNotes;
-                result.push_back(dn);
-            }
-        }
+    while (std::getline(ss, line)) {
+        if (!line.empty())          // pomijamy puste linie
+            lines.push_back(line);
     }
-
-    return result;
+    return lines;
 }
-void PrintNote(const Note& note) {
-    std::cout
-        << "struna: " << note.stringName
-        << ", prog: " << note.fret
-        << ", freq: " << note.frequency << " Hz";
-}
-void PrintDetectedNotes(const std::vector<DetectedNote>& detectedNotes) {
-    std::cout << "Wykryte dzwieki:\n";
-    std::cout << "-----------------------------\n";
-
-    for (const auto& dn : detectedNotes) {
-        std::cout << "Czas uderzenia: "
-                  << dn.time << " s\n";
-
-        std::cout << "Mozliwe dzwieki:\n";
-
-        for (const auto& note : dn.notes) {
-            std::cout << "  - ";
-            PrintNote(note);
-            std::cout << "\n";
-        }
-
-        std::cout << "-----------------------------\n";
-    }
-}
-
-void saveTabToFile(const TabFrame& tab, const std::string& filename) {
-    std::ofstream outFile(filename); 
+void saveTabToFile(const TabFrame& tab, const std::string& filename)
+{
+    std::ofstream outFile(filename);
     if (!outFile) {
         std::cerr << "Nie można otworzyć pliku do zapisu!\n";
         return;
     }
 
-    outFile << tab.G << "\n";
-    outFile << tab.D << "\n";
-    outFile << tab.A << "\n";
-    outFile << tab.E << "\n";
+    auto GLines = splitLines(tab.G);
+    auto DLines = splitLines(tab.D);
+    auto ALines = splitLines(tab.A);
+    auto ELines = splitLines(tab.E);
 
-    outFile.close(); 
-}
+    size_t blocks = std::max({
+        GLines.size(),
+        DLines.size(),
+        ALines.size(),
+        ELines.size()
+    });
 
-//do odczytu po analizie całosci na koniec a nie na bierzaco jak powyzsza funkcja
-
-void SaveTabsToFile(
-    const std::vector<DetectedNote>& detectedNotes,
-    const std::string& filename
-) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Nie mozna otworzyc pliku: " << filename << "\n";
-        return;
+    for (size_t i = 0; i < blocks; ++i)
+    {
+        outFile << (i < GLines.size() ? GLines[i] : "") << "\n";
+        outFile << (i < DLines.size() ? DLines[i] : "") << "\n";
+        outFile << (i < ALines.size() ? ALines[i] : "") << "\n";
+        outFile << (i < ELines.size() ? ELines[i] : "") << "\n\n";
     }
 
-    std::string G = "G:";
-    std::string D = "D:";
-    std::string A = "A:";
-    std::string E = "E:";
-
-    for (const auto& dn : detectedNotes) {
-
-        // domyslnie cisza
-        std::string g = "----";
-        std::string d = "----";
-        std::string a = "----";
-        std::string e = "----";
-
-        // jesli w tej samej chwili kilka dzwiekow (akord)
-        for (const auto& note : dn.notes) {
-
-            std::string fretStr = std::to_string(note.fret);
-
-            // format szerokosci 4 znakow
-            if (fretStr.size() == 1)
-                fretStr = "-" + fretStr + "--"; // -3--
-            else if (fretStr.size() == 2)
-                fretStr = fretStr + "--";       // 12--
-            else
-                fretStr = fretStr.substr(0, 4);
-
-            if (note.stringName == 'G') g = fretStr;
-            if (note.stringName == 'D') d = fretStr;
-            if (note.stringName == 'A') a = fretStr;
-            if (note.stringName == 'E') e = fretStr;
-        }
-
-        G += g;
-        D += d;
-        A += a;
-        E += e;
-    }
-
-    file << G << "\n";
-    file << D << "\n";
-    file << A << "\n";
-    file << E << "\n";
-
-    file.close();
+    outFile.close();
 }
 
 void saveHistoryToFile(){
@@ -768,10 +675,10 @@ int main()
                         if(s.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
                             //myTabs zeruje i zaczyna leciec petla zapisujaca dzwieki
-                            myTabs.E = "E|-";
-                            myTabs.A = "A|-";
-                            myTabs.D = "D|-";
-                            myTabs.G = "G|-";
+                            myTabs.E = "E|";
+                            myTabs.A = "A|";
+                            myTabs.D = "D|";
+                            myTabs.G = "G|";
                             tabCreatorEText.setString(myTabs.E);
                             tabCreatorAText.setString(myTabs.A);
                             tabCreatorDText.setString(myTabs.D);
@@ -797,14 +704,7 @@ int main()
                             tabCreatorRunning = false;
                             saveTabToFile(myTabs, "moja_tabulaturaBasia");
                             saveHistoryToFile();
-                            auto detected = Przelicz(
-                                volumeHistory,
-                                frequencyHistory,
-                                dtHistory
-                            );
-
-                            PrintDetectedNotes(detected);
-                            SaveTabsToFile(detected, "tabulatura.txt");
+                            
                         }
                     }
                     if(event.mouseButton.button == sf::Mouse::Left)
@@ -814,10 +714,10 @@ int main()
                         {
                             //zapisuje aktualny stan myTabs i zapisuje do pliku txt
                             tabCreatorRunning = false;
-                            myTabs.E = "E|-";
-                            myTabs.A = "A|-";
-                            myTabs.D = "D|-";
-                            myTabs.G = "G|-";
+                            myTabs.E = "E|";
+                            myTabs.A = "A|";
+                            myTabs.D = "D|";
+                            myTabs.G = "G|";
                             tabCreatorEText.setString(myTabs.E);
                             tabCreatorAText.setString(myTabs.A);
                             tabCreatorDText.setString(myTabs.D);
@@ -1398,10 +1298,10 @@ int main()
                 myTabs.G += Gstr;
                 //std::cout <<myTabs.E.size();
                 // Ronienie kolejnej lini zeby nie leciala tabulatura poza ekran tylko kolejne linie zaczynaly sie nizej
-                if (myTabs.E.size() % 138 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.A.size() % 138 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.D.size() % 138 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\n";}
-                if (myTabs.G.size() % 138 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\n";}
+                if (myTabs.E.size() % 137 == 0){myTabs.E += "\n\n\n\n\n\n\n\n\nE|";}
+                if (myTabs.A.size() % 137 == 0){myTabs.A += "\n\n\n\n\n\n\n\n\nA|";}
+                if (myTabs.D.size() % 137 == 0){myTabs.D += "\n\n\n\n\n\n\n\n\nD|";}
+                if (myTabs.G.size() % 137 == 0){myTabs.G += "\n\n\n\n\n\n\n\n\nG|";}
                 if (myTabs.E.size() >=552 ){tabCreatorRunning = false;}
                 tabCreatorEText.setString(myTabs.E);
                 tabCreatorAText.setString(myTabs.A);
