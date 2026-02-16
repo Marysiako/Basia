@@ -74,7 +74,7 @@ std::string wylosowany_dzwiek = "E";
 bool metronome_power = 1;
 std::thread metronomeThread;
 
-// Inicjalizacja dzwiekow do metronomu
+// Inicjalizacja dzwiekow do metronomu   --- MUSZE POPRAWIC ZEBY 4/4 I 4/8 ZMIENIALO MOMENT PIERWSZEGO UDERZNEIA
 void MetronomeThread() {
     sf::SoundBuffer buffer1;
     if (!buffer1.loadFromFile("sound/click.wav")) {
@@ -246,7 +246,7 @@ void saveHistoryToFile(){
 }
 int main()
 {
-    if (!InitAudio()) {
+    if (!InitAudio()) {//CloseAudio
         std::cerr << "Błąd inicjalizacji audio!\n";
         return -1;
     }
@@ -386,18 +386,13 @@ int main()
     // czcionki i pozycje
     //Metronom
     //TEXT metronome_top_text("4", 380, 140, 80, "szary");
-    sf::Text metronome_top_text;
-    sf::Text metronome_bottom_text;
+    sf::Text metronome_top_text; //ilosc uderzen ktore liczymy
     sf::Text bpm_text;
 
     metronome_top_text.setFont(font);
-    metronome_bottom_text.setFont(font);
     metronome_top_text.setPosition(380, 140);
-    metronome_bottom_text.setPosition(530, 140);
     metronome_top_text.setCharacterSize(80);
-    metronome_bottom_text.setCharacterSize(80);
     metronome_top_text.setFillColor(szary);
-    metronome_bottom_text.setFillColor(szary);
     bpm_text.setFillColor(szary);
     bpm_text.setFont(font);
     bpm_text.setPosition(390, 280);
@@ -702,7 +697,10 @@ int main()
                         {
                             //zapisuje aktualny stan myTabs i zapisuje do pliku txt
                             tabCreatorRunning = false;
-                            saveTabToFile(myTabs, "moja_tabulaturaBasia");
+
+                            std::string homeDir = std::getenv("HOME");
+                            std::string path = homeDir + "/moja_tabulaturaBasia.txt";
+                            saveTabToFile(myTabs, path);
                             saveHistoryToFile();
                             
                         }
@@ -774,22 +772,7 @@ int main()
                                 beatsPerMeasure-=1;
                             }
                         }
-                        sf::FloatRect mnp = metronome_notes_plus.getSpriteGlobalBounds();
-                        if(mnp.contains(float(event.mouseButton.x),(event.mouseButton.y)))
-                        {
-                            if(note<16)
-                            {
-                                note=note*2;
-                            }
-                        }
-                        sf::FloatRect mnm = metronome_notes_minus.getSpriteGlobalBounds();
-                        if(mnm.contains(float(event.mouseButton.x),(event.mouseButton.y)))
-                        {
-                            if(note>1)
-                            {
-                                note=note/2;
-                            }
-                        }
+
                         sf::FloatRect mtp = bpm_plus_button.getSpriteGlobalBounds();
                         if(mtp.contains(float(event.mouseButton.x),(event.mouseButton.y)))
                         {
@@ -1209,8 +1192,8 @@ int main()
             if (tabCreatorRunning){
                 // Odczyt czestotliwosci i energii miedzy dwoma oknami (spectral flux)
                 float freq = GetFrequencyFromMicrophone();
-                float vol = GetSFFrameFromMicrophone(); //energia
-                volumeHistory.push_back(vol);
+                float spectralFlux = GetSFFrameFromMicrophone(); //energia
+                volumeHistory.push_back(spectralFlux);
                 frequencyHistory.push_back(freq);
 
                 // Obliczenie czasu odczytu od poczatku tabulatury (do analizy wykresow)
@@ -1224,7 +1207,7 @@ int main()
                 const int N = 20;
 
                 //--------- PROG ADAPTACYJNY ------------------
-                history.push_back(vol);
+                history.push_back(spectralFlux);
                 if (history.size() > N) history.erase(history.begin()); //history.erase usuwa najstarszy element begin i przesuwa w lewo elementy
 
                 // obliczenie sredniej
@@ -1249,11 +1232,12 @@ int main()
 
                 // detekcja uderzenia
                 bool hit = false;
-                if ((vol > threshold || vol > 0.5f)&& dt > 0.060f && vol > 0.05f) {   // 60 ms musi byc miedzy uderzeniami
+                if ((spectralFlux > threshold || spectralFlux > 0.5f)&& dt > 0.060f && spectralFlux > 0.05f) {   // 60 ms musi byc miedzy uderzeniami
                     hit = true;
-                    if (vol > threshold ){std::cout << "threshold";}
-                    if (vol > 0.5f ){std::cout << "0.5";}
                     lastHit = now;
+                    if (spectralFlux > threshold ){std::cout << "threshold";}
+                    if (spectralFlux > 0.5f ){std::cout << "0.5";}
+                    
                 }
 
                 //std::this_thread::sleep_for(std::chrono::milliseconds(20)); 
@@ -1307,7 +1291,7 @@ int main()
                 tabCreatorAText.setString(myTabs.A);
                 tabCreatorDText.setString(myTabs.D);
                 tabCreatorGText.setString(myTabs.G);
-                std::cout << "vol: " << vol << std::endl;
+                std::cout << "vol: " << spectralFlux << std::endl;
                 for (Note n: currentNotes){
                 std::cout << n.stringName << n.fret <<std::endl;
                 }
@@ -1345,13 +1329,13 @@ int main()
         if (screen_number == 3)
         {
              // Konwertowanie beatsPerMeasure i note na stringi
-            std::string beatsPerMeasureStr = std::to_string(beatsPerMeasure)+" /";
+            std::string beatsPerMeasureStr = std::to_string(beatsPerMeasure)+" beats";
             std::string noteStr = std::to_string(note);
             std::string bpmstr = std::to_string(tempo);
 
             metronome_top_text.setString(beatsPerMeasureStr);
             //metronome_top_text.settext(beatsPerMeasureStr);
-            metronome_bottom_text.setString(noteStr);
+
             bpm_text.setString(bpmstr);
             if (metronome_power)
             {
@@ -1374,11 +1358,8 @@ int main()
             background_sprite.draw(window);
             window.draw(metronome_top_text);
             //metronome_top_text.draw(window);
-            window.draw(metronome_bottom_text);
             metronome_beats_plus.draw(window);
             metronome_beats_minus.draw(window);
-            metronome_notes_plus.draw(window);
-            metronome_notes_minus.draw(window);
             bpm_plus_button.draw(window);
             bpm_minus_button.draw(window);
             window.draw(bpm_text);
